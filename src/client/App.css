@@ -1,0 +1,85 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-bg);
+}
+
+/* Main content area - JobsPage */
+.app > :not(.app-footer) {
+  flex: 1;
+  min-height: 0;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+/* Footer Status Bar */
+.app-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  padding: var(--space-md) var(--space-lg);
+  height: auto;
+}
+
+.status-bar {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+/* Settings Button */
+.app-settings-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-color, #3b82f6);
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+  z-index: 100;
+}
+
+.app-settings-btn:hover {
+  background: var(--primary-dark, #2563eb);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  transform: scale(1.05);
+}
+
+.app-settings-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .three-panel-layout {
+    grid-template-columns: 300px 1fr 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .three-panel-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .panel:first-child {
+    display: flex;
+  }
+}

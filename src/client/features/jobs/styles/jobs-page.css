@@ -1,0 +1,62 @@
+.jobs-page {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  height: calc(100vh - 60px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sources-panel,
+.chat-panel,
+.studio-panel {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-header {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.panel-header h2 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+}
+
+.panel-subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .jobs-page {
+    grid-template-columns: 300px 1fr 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .jobs-page {
+    grid-template-columns: 1fr;
+  }
+
+  .sources-panel,
+  .chat-panel,
+  .studio-panel {
+    display: none;
+  }
+
+  .sources-panel {
+    display: flex;
+  }
+}

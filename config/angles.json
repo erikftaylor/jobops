@@ -1,0 +1,87 @@
+{
+  "angles": [
+    {
+      "id": "systems-engineering",
+      "label": "Systems & Engineering Collaboration",
+      "description": "Emphasize deep technical systems thinking and ability to collaborate across engineering teams",
+      "leadWith": [
+        "End-to-end system design and implementation",
+        "Cross-team technical collaboration",
+        "Scalability and performance optimization",
+        "Technical documentation and knowledge sharing"
+      ],
+      "supportingEvidenceKeywords": [
+        "architecture",
+        "system",
+        "engineering",
+        "scale",
+        "performance",
+        "collaborate",
+        "infrastructure"
+      ]
+    },
+    {
+      "id": "regulated-industries",
+      "label": "Regulated Industries & High-Stakes Design",
+      "description": "Highlight experience with compliance, risk management, and designing for high-stakes environments",
+      "leadWith": [
+        "Compliance and regulatory awareness",
+        "Risk management and mitigation",
+        "Safety-critical design thinking",
+        "Audit-ready documentation practices"
+      ],
+      "supportingEvidenceKeywords": [
+        "compliance",
+        "regulated",
+        "healthcare",
+        "financial",
+        "audit",
+        "risk",
+        "security",
+        "governance"
+      ]
+    },
+    {
+      "id": "design-operations",
+      "label": "Design Operations & Team Leadership",
+      "description": "Lead with team building, process design, and scaling design practices across organizations",
+      "leadWith": [
+        "Team leadership and mentorship",
+        "Design system creation and maintenance",
+        "Process optimization and scaling",
+        "Cross-functional stakeholder management"
+      ],
+      "supportingEvidenceKeywords": [
+        "lead",
+        "mentor",
+        "team",
+        "system",
+        "process",
+        "scale",
+        "stakeholder",
+        "strategic"
+      ]
+    },
+    {
+      "id": "emerging-ai",
+      "label": "AI & Emerging Design Practice",
+      "description": "Showcase forward-thinking approach to AI integration, emerging technologies, and future-ready skills",
+      "leadWith": [
+        "AI-augmented design practices",
+        "Emerging technology adoption",
+        "Research and experimentation",
+        "Innovation and thought leadership"
+      ],
+      "supportingEvidenceKeywords": [
+        "AI",
+        "emerging",
+        "innovation",
+        "experiment",
+        "research",
+        "prototype",
+        "beta",
+        "cutting-edge"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+.job-list-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-md);
+  gap: var(--space-md);
+  overflow-y: auto;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.chip {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.chip.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.job-item {
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-bg);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.job-item:hover {
+  border-color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
+.job-item.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.job-title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.job-company {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.job-state {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.job-state.state-draft {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.job-state.state-analyzed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.job-state.state-refining {
+  background-color: #fef08a;
+  color: #713f12;
+}
+
+.job-state.state-approved {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.job-state.state-generated {
+  background-color: #e9d5ff;
+  color: #6b21a8;
+}
+
+.job-state.state-applied {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.job-state.state-closed {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: var(--space-xl);
+  font-size: var(--font-size-sm);
+}

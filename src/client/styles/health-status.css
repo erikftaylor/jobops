@@ -1,0 +1,42 @@
+.health-status {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.status-item.ok {
+  color: var(--color-success);
+}
+
+.status-item.warning {
+  color: var(--color-warning);
+}
+
+.status-item.error {
+  color: var(--color-error);
+}
+
+.status-item .indicator {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-block;
+}
+
+/* Accessibility */
+.status-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
