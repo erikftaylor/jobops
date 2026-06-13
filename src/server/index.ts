@@ -10,6 +10,7 @@ import settingsRouter from "./routes/settings.js";
 import analysisRouter from "./routes/analysis.js";
 import conversationRouter from "./routes/conversation.js";
 import artifactsRouter from "./routes/artifacts.js";
+import workspaceRouter from "./routes/workspace.js";
 
 fileURLToPath(import.meta.url); // Keep for potential future use
 
@@ -48,6 +49,7 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/jobs", analysisRouter);
 app.use("/api/conversations", conversationRouter);
 app.use("/api/artifacts", artifactsRouter);
+app.use("/api/workspace", workspaceRouter);
 
 app.get("/health", (_req: Request, res: Response) => {
   try {
