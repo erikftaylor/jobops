@@ -1,0 +1,113 @@
+{{!-- Executive Resume Template --}}
+{{#if name}}
+<div style="text-align: center; margin-bottom: 25px;">
+  <h1 style="margin: 0; font-size: 32px; font-weight: bold;">{{name}}</h1>
+  {{#if currentTitle}}
+  <p style="margin: 5px 0; font-size: 14px; font-weight: bold;">{{currentTitle}}</p>
+  {{/if}}
+  {{#if contact}}
+  <p style="margin: 5px 0; font-size: 12px;">
+    {{#if contact.email}}{{contact.email}}{{#if contact.phone}} | {{/if}}{{/if}}
+    {{#if contact.phone}}{{contact.phone}}{{#if contact.location}} | {{/if}}{{/if}}
+    {{#if contact.location}}{{contact.location}}{{/if}}
+  </p>
+  {{/if}}
+</div>
+{{/if}}
+
+{{#if summary}}
+<div style="margin-bottom: 25px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Executive Summary</h2>
+  <p style="margin: 0; font-size: 11px; line-height: 1.7; text-align: justify;">{{summary}}</p>
+</div>
+{{/if}}
+
+{{#if keyMetrics}}
+<div style="margin-bottom: 25px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Key Metrics & Achievements</h2>
+  <ul style="margin: 0; padding: 0; font-size: 11px; line-height: 1.7;">
+    {{#each keyMetrics}}
+    <li style="margin-bottom: 6px;">{{this}}</li>
+    {{/each}}
+  </ul>
+</div>
+{{/if}}
+
+{{#if experience}}
+<div style="margin-bottom: 25px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Strategic Leadership Experience</h2>
+  {{#each experience}}
+  <div style="margin-bottom: 15px; page-break-inside: avoid;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px;">
+      <h3 style="margin: 0; font-weight: bold; font-size: 12px;">{{this.title}}</h3>
+      {{#if this.start_date}}
+      <span style="font-size: 10px; color: #555;">{{formatDate this.start_date}}{{#if this.is_current}} - Present{{else}}{{#if this.end_date}} - {{formatDate this.end_date}}{{/if}}{{/if}}</span>
+      {{/if}}
+    </div>
+    <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 11px;">{{this.company}}</p>
+    {{#if this.description}}
+    <p style="margin: 5px 0; font-size: 11px; line-height: 1.6;">{{this.description}}</p>
+    {{/if}}
+    {{#if this.achievements}}
+    <ul style="margin: 5px 0 0 25px; padding: 0; font-size: 11px; line-height: 1.6;">
+      {{#each this.achievements}}
+      <li style="margin-bottom: 4px;">{{this}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{#if competencies}}
+<div style="margin-bottom: 25px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Core Competencies</h2>
+  <p style="margin: 0; font-size: 11px; line-height: 1.6;">
+    {{#each competencies}}
+      {{#if @index}} • {{/if}}{{this}}
+    {{/each}}
+  </p>
+</div>
+{{/if}}
+
+{{#if skills}}
+<div style="margin-bottom: 25px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Skills & Expertise</h2>
+  <p style="margin: 0; font-size: 11px; line-height: 1.6;">
+    {{#each skills}}
+      {{#if @index}}, {{/if}}{{this.name}}
+    {{/each}}
+  </p>
+</div>
+{{/if}}
+
+{{#if education}}
+<div style="margin-bottom: 20px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Education & Professional Development</h2>
+  {{#each education}}
+  <div style="margin-bottom: 8px;">
+    <div style="display: flex; justify-content: space-between;">
+      <h3 style="margin: 0; font-weight: bold; font-size: 11px;">{{this.degree}}</h3>
+      {{#if this.graduation_date}}
+      <span style="font-size: 10px; color: #555;">{{formatDate this.graduation_date}}</span>
+      {{/if}}
+    </div>
+    <p style="margin: 2px 0; font-size: 11px;">{{this.field_of_study}}</p>
+    <p style="margin: 0; font-size: 10px; color: #666;">{{this.institution}}</p>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{#if certifications}}
+<div style="margin-bottom: 20px;">
+  <h2 style="font-size: 13px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 8px; margin: 0 0 12px 0; text-transform: uppercase;">Board Certifications & Licenses</h2>
+  {{#each certifications}}
+  <div style="margin-bottom: 4px; font-size: 10px;">
+    <strong>{{this.name}}</strong> - {{this.issuer}}
+    {{#if this.issue_date}}<span style="color: #666;">({{formatDate this.issue_date}})</span>{{/if}}
+  </div>
+  {{/each}}
+</div>
+{{/if}}
