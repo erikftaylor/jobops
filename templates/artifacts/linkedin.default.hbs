@@ -1,0 +1,94 @@
+{{!-- LinkedIn Profile Template --}}
+{{#if headline}}
+<div style="margin-bottom: 15px;">
+  <h2 style="font-size: 14px; font-weight: bold; margin: 0;">{{headline}}</h2>
+</div>
+{{/if}}
+
+{{#if about}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">About</h3>
+  <p style="margin: 0; font-size: 11px; line-height: 1.7;">{{about}}</p>
+</div>
+{{/if}}
+
+{{#if expertise}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Expertise</h3>
+  <p style="margin: 0; font-size: 11px; line-height: 1.7;">
+    {{#each expertise}}
+      {{#if @index}}, {{/if}}{{this}}
+    {{/each}}
+  </p>
+</div>
+{{/if}}
+
+{{#if experience}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 12px 0;">Experience</h3>
+  {{#each experience}}
+  <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid #e5e5e5;">
+    <h4 style="font-size: 11px; font-weight: bold; margin: 0;">{{this.title}}</h4>
+    <p style="margin: 3px 0; font-size: 10px;">{{this.company}}{{#if this.duration}} • {{this.duration}}{{/if}}</p>
+    {{#if this.description}}
+    <p style="margin: 5px 0; font-size: 10px; line-height: 1.6;">{{this.description}}</p>
+    {{/if}}
+    {{#if this.accomplishments}}
+    <ul style="margin: 5px 0 0 18px; padding: 0; font-size: 10px; line-height: 1.5;">
+      {{#each this.accomplishments}}
+      <li style="margin-bottom: 3px;">{{this}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{#if education}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 12px 0;">Education</h3>
+  {{#each education}}
+  <div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e5e5e5;">
+    <h4 style="font-size: 11px; font-weight: bold; margin: 0;">{{this.degree}}</h4>
+    <p style="margin: 3px 0; font-size: 10px;">{{this.field_of_study}}</p>
+    <p style="margin: 3px 0; font-size: 10px;">{{this.institution}}{{#if this.graduation_date}} • {{this.graduation_date}}{{/if}}</p>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{#if certifications}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 12px 0;">Certifications</h3>
+  {{#each certifications}}
+  <div style="margin-bottom: 8px; font-size: 10px;">
+    <p style="margin: 0; font-weight: bold;">{{this.name}}</p>
+    <p style="margin: 0;">{{this.issuer}}{{#if this.issue_date}} • {{this.issue_date}}{{/if}}</p>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{#if skills}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Top Skills</h3>
+  <p style="margin: 0; font-size: 10px; line-height: 1.6;">
+    {{#each skills}}
+      {{#if @index}}, {{/if}}{{this.name}}
+    {{/each}}
+  </p>
+</div>
+{{/if}}
+
+{{#if recommendations}}
+<div style="margin-bottom: 20px;">
+  <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 12px 0;">Recommendations</h3>
+  {{#each recommendations}}
+  <div style="margin-bottom: 10px; padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 10px; line-height: 1.6;">
+    <p style="margin: 0 0 5px 0; font-style: italic;">"{{this.text}}"</p>
+    <p style="margin: 0; font-weight: bold;">— {{this.recommender}}</p>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
