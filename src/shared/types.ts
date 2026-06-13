@@ -229,14 +229,35 @@ export interface ChangeNode {
   created_at: string;
 }
 
-// Career Model (resolved snapshot)
+// Career Model (resolved snapshot) - Simplified for scoring services
 export interface CareerModel {
-  id: string;
-  hash: string;
-  created_at: string;
-  based_on: string; // parent model ID or "master"
-  content: string; // JSON stringified career document
-  metadata?: Record<string, any>;
+  fullName: string;
+  sections: {
+    summary?: string;
+    experience?: Array<{
+      company: string;
+      title: string;
+      startDate: string;
+      endDate: string;
+      description: string;
+      metrics?: string[];
+    }>;
+    skills?: string[];
+    education?: Array<{
+      school: string;
+      degree: string;
+      year: string;
+    }>;
+  };
+  metadata: {
+    hash: string;
+    source: string;
+  };
+  // Legacy fields for backward compatibility
+  id?: string;
+  created_at?: string;
+  based_on?: string;
+  content?: string;
 }
 
 // Artifact Template
@@ -298,5 +319,92 @@ export interface HealthCheckResponse {
   claude_api: {
     key_configured: boolean;
     warning?: string | null;
+  };
+}
+
+// Workspace: Resume Scoring
+export interface ScoreCategory {
+  name: string;
+  score: number;
+  maxScore: number;
+  explanation: string;
+}
+
+export interface ResumeScore {
+  total: number;
+  maxScore: 100;
+  confidence: number; // 0-1
+  categories: {
+    atsKeywordMatch: ScoreCategory;
+    roleAlignment: ScoreCategory;
+    seniorityAlignment: ScoreCategory;
+    impactMetrics: ScoreCategory;
+    recruiterReadability: ScoreCategory;
+    formattingQuality: ScoreCategory;
+  };
+  recommendations: string[];
+  updatedAt: string;
+}
+
+// Workspace: Keyword Analysis
+export interface MissingKeyword {
+  keyword: string;
+  importance: "critical" | "high" | "medium" | "low";
+  status: "missing" | "weak";
+  frequency: {
+    inJob: number;
+    inResume: number;
+  };
+  suggestedPlacement: string; // e.g., "skills", "summary", "experience"
+  suggestedLanguage: string;
+}
+
+export interface KeywordAnalysis {
+  missingKeywords: MissingKeyword[];
+  totalKeywordsInJob: number;
+  matchedCount: number;
+  matchPercentage: number;
+  summary: string;
+}
+
+// Workspace: Recruiter Heatmap
+export interface HeatmapSection {
+  sectionName: string;
+  visibilityScore: number; // 0-100
+  recruiterConfidence: "high" | "medium" | "low";
+  riskLevel: "low" | "medium" | "high";
+  keyObservations: string[];
+  recommendedImprovement: string;
+  isVisible: boolean;
+}
+
+export interface RecruiterHeatmap {
+  overallVisibility: number;
+  sections: HeatmapSection[];
+  sixSecondSkim: string[];
+  skippedSections: string[];
+}
+
+// Workspace: Job Fit Analysis
+export interface ExperienceGap {
+  requirement: string;
+  hasMatch: boolean;
+  severity: "critical" | "moderate" | "minor";
+  suggestion: string;
+}
+
+export interface JobFitAnalysis {
+  overallFit: number; // 0-100
+  confidenceLevel: "high" | "medium" | "low";
+  strongMatches: string[];
+  weakMatches: string[];
+  rejectionRisks: string[];
+  interviewTalkingPoints: string[];
+  experienceGaps: ExperienceGap[];
+  recommendedPositioningAngle: string;
+  likelihood: {
+    phoneScreen: number;
+    technicalInterview: number;
+    offer: number;
   };
 }
