@@ -11,12 +11,14 @@ export function migrate005(db: Database): void {
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       status TEXT NOT NULL CHECK (status IN ('active', 'closed')) DEFAULT 'active',
       memory TEXT NOT NULL DEFAULT '{}',
-
-      UNIQUE(job_id),
-      INDEX idx_job_id (job_id),
-      INDEX idx_analysis_id (analysis_id),
-      INDEX idx_status (status)
+      UNIQUE(job_id)
     );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_conversations_job_id ON conversations(job_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_analysis_id ON conversations(analysis_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
   `);
 
   // Conversation messages table
@@ -27,11 +29,13 @@ export function migrate005(db: Database): void {
       role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
       content TEXT NOT NULL,
       message_type TEXT NOT NULL CHECK (message_type IN ('chat', 'question', 'suggestion', 'confirmation')) DEFAULT 'chat',
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-      INDEX idx_conversation_id (conversation_id),
-      INDEX idx_created_at (created_at)
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_conversation_messages_conversation_id ON conversation_messages(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_conversation_messages_created_at ON conversation_messages(created_at);
   `);
 
   // Change sets (proposed changes) table
@@ -50,12 +54,14 @@ export function migrate005(db: Database): void {
       status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected', 'modified')) DEFAULT 'pending',
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       decided_at DATETIME,
-      decision_note TEXT,
-
-      INDEX idx_conversation_id (conversation_id),
-      INDEX idx_status (status),
-      INDEX idx_created_at (created_at)
+      decision_note TEXT
     );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_change_sets_conversation_id ON change_sets(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_change_sets_status ON change_sets(status);
+    CREATE INDEX IF NOT EXISTS idx_change_sets_created_at ON change_sets(created_at);
   `);
 
   // Accepted changes tracking (audit trail)
@@ -64,11 +70,13 @@ export function migrate005(db: Database): void {
       id TEXT PRIMARY KEY,
       change_set_id TEXT NOT NULL UNIQUE REFERENCES change_sets(id) ON DELETE CASCADE,
       job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-      accepted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-      INDEX idx_job_id (job_id),
-      INDEX idx_change_set_id (change_set_id)
+      accepted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_accepted_changes_job_id ON accepted_changes(job_id);
+    CREATE INDEX IF NOT EXISTS idx_accepted_changes_change_set_id ON accepted_changes(change_set_id);
   `);
 
   // Analytics events table
@@ -83,11 +91,13 @@ export function migrate005(db: Database): void {
         'resume_updated', 'memory_recorded'
       )),
       timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      details TEXT,
-
-      INDEX idx_job_id (job_id),
-      INDEX idx_event_type (event_type),
-      INDEX idx_timestamp (timestamp)
+      details TEXT
     );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_analytics_events_job_id ON analytics_events(job_id);
+    CREATE INDEX IF NOT EXISTS idx_analytics_events_event_type ON analytics_events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_analytics_events_timestamp ON analytics_events(timestamp);
   `);
 }
