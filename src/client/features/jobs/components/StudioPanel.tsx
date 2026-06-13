@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Job } from "@shared/types";
+import ConversationPanel from "./ConversationPanel.js";
 import "../styles/studio-panel.css";
 
 type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "applied" | "closed";
@@ -70,6 +71,7 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
 
   if (!selectedJob) {
     return (
@@ -105,6 +107,27 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
       setAnalysisData(data);
       if (onAnalysisRefresh) {
         onAnalysisRefresh();
+      }
+
+      // Start a conversation after successful analysis
+      try {
+        const conversationResponse = await fetch("/api/conversations/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jobId: selectedJob.id,
+            analysisId: data.id,
+          }),
+        });
+
+        if (conversationResponse.ok) {
+          const conversation = await conversationResponse.json();
+          setActiveConversation(conversation.id);
+        } else {
+          console.error("Failed to start conversation:", await conversationResponse.json());
+        }
+      } catch (err) {
+        console.error("Error starting conversation:", err);
       }
     } catch (err) {
       setAnalysisError((err as Error).message);
@@ -231,6 +254,12 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
           <p className="closed-message">This job is closed. No further actions available.</p>
         )}
       </div>
+
+      {activeConversation && (
+        <ConversationPanel
+          conversationId={activeConversation}
+        />
+      )}
     </div>
   );
 }
