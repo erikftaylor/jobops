@@ -19,6 +19,8 @@ export interface Job {
   notes?: string;
   positioning_angle?: string;
   created_at?: string;
+  accepted_changes?: string[]; // change_set IDs that have been accepted
+  conversation_id?: string; // current active conversation
 }
 
 // Analysis
