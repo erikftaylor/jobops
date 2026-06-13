@@ -8,6 +8,7 @@ import { initializeClaudeService } from "./services/claude.service.js";
 import jobsRouter from "./routes/jobs.js";
 import settingsRouter from "./routes/settings.js";
 import analysisRouter from "./routes/analysis.js";
+import conversationRouter from "./routes/conversation.js";
 
 fileURLToPath(import.meta.url); // Keep for potential future use
 
@@ -44,6 +45,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 app.use("/api/jobs", jobsRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/jobs", analysisRouter);
+app.use("/api/conversations", conversationRouter);
 
 app.get("/health", (_req: Request, res: Response) => {
   try {
