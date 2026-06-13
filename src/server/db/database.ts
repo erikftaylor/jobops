@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { migrate005 } from "./migrations/005-conversation-tables.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,6 +47,15 @@ class DatabaseService {
 
     const sql = fs.readFileSync(migrationFile, "utf-8");
     this.db.exec(sql);
+
+    // Run TypeScript migrations
+    try {
+      migrate005(this.db);
+    } catch (err: any) {
+      if (!err.message.includes("already exists")) {
+        throw err;
+      }
+    }
   }
 
   public getConnection(): Database.Database {
