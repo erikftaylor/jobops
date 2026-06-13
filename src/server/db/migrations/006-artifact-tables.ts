@@ -114,4 +114,21 @@ export function migrate006(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_artifact_templates_type ON artifact_templates(type);
     CREATE INDEX IF NOT EXISTS idx_artifact_templates_created_at ON artifact_templates(created_at);
   `);
+
+  // Output Contracts table - schema and validation rules for generated artifacts
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS output_contracts (
+      id TEXT PRIMARY KEY,
+      artifact_type TEXT NOT NULL UNIQUE CHECK (artifact_type IN (
+        'resume_pdf', 'resume_source', 'cover_letter_pdf', 'cover_letter_source', 'both_pdf'
+      )),
+      schema TEXT NOT NULL,
+      required_fields TEXT NOT NULL,
+      optional_fields TEXT NOT NULL
+    );
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_output_contracts_artifact_type ON output_contracts(artifact_type);
+  `);
 }
