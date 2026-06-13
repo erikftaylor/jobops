@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { migrate005 } from "./migrations/005-conversation-tables.js";
+import { migrate006 } from "./migrations/006-artifact-tables.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -51,6 +52,14 @@ class DatabaseService {
     // Run TypeScript migrations
     try {
       migrate005(this.db);
+    } catch (err: any) {
+      if (!err.message.includes("already exists")) {
+        throw err;
+      }
+    }
+
+    try {
+      migrate006(this.db);
     } catch (err: any) {
       if (!err.message.includes("already exists")) {
         throw err;

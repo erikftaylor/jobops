@@ -211,6 +211,66 @@ export interface Project {
   end_date?: string;
 }
 
+// Change Graph Node
+export interface ChangeNode {
+  id: string;
+  target: "resume" | "cover_letter" | "both";
+  field: string;
+  operation: "add" | "remove" | "modify" | "rewrite";
+  original_value?: string;
+  new_value?: string;
+  reason: string;
+  source: "analysis" | "user" | "ai_suggestion" | "system";
+  confidence: number; // 0-1
+  accepted_at?: string;
+  conversation_id?: string;
+  analysis_id?: string;
+  tags?: string[];
+  created_at: string;
+}
+
+// Career Model (resolved snapshot)
+export interface CareerModel {
+  id: string;
+  hash: string;
+  created_at: string;
+  based_on: string; // parent model ID or "master"
+  content: string; // JSON stringified career document
+  metadata?: Record<string, any>;
+}
+
+// Artifact Template
+export interface ArtifactTemplate {
+  id: string;
+  name: string;
+  type: "resume" | "cover_letter";
+  variant?: string;
+  content: string; // template content with placeholders
+  schema?: Record<string, any>; // JSON schema for template variables
+  created_at: string;
+}
+
+// Output Contract (schema for generated artifacts)
+export interface OutputContract {
+  id: string;
+  artifact_type: "resume_pdf" | "resume_source" | "cover_letter_pdf" | "cover_letter_source" | "both_pdf";
+  schema: Record<string, any>; // JSON schema
+  required_fields: string[];
+  optional_fields: string[];
+}
+
+// Positioning Profile (reusable positioning configuration)
+export interface PositioningProfile {
+  id: string;
+  name: string;
+  description?: string;
+  tone: "formal" | "casual" | "balanced";
+  emphasis: string[]; // e.g., ["technical", "leadership", "innovation"]
+  ats_keywords?: string[];
+  industry_focus?: string[];
+  created_at: string;
+}
+
 // API Responses
 export interface ApiResponse<T> {
   data?: T;
