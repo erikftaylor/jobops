@@ -1,0 +1,317 @@
+.preview-renderer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-background);
+  font-family: Georgia, serif;
+  color: var(--color-text-primary);
+}
+
+.preview-renderer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xl);
+  background-color: white;
+}
+
+.preview-renderer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.preview-renderer-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.preview-renderer-loading-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.preview-renderer-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-xl);
+}
+
+.preview-renderer-error-box {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--border-radius);
+  padding: var(--space-lg);
+  color: #991b1b;
+  max-width: 500px;
+  text-align: center;
+}
+
+.preview-renderer-error-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.preview-renderer-error-message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.preview-renderer-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
+/* Resume/Preview Header */
+.preview-header {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 2px solid #000;
+}
+
+.preview-header-info {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.preview-header-positioning {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.preview-header-experience {
+  color: var(--color-text-secondary);
+}
+
+/* Summary Section */
+.preview-section {
+  margin-bottom: var(--space-xl);
+}
+
+.preview-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-md) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #000;
+  padding-bottom: var(--space-sm);
+  color: var(--color-text-primary);
+}
+
+.preview-summary {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-align: justify;
+}
+
+/* Experience Section */
+.preview-experience-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.preview-experience-item {
+  margin-bottom: var(--space-lg);
+  page-break-inside: avoid;
+}
+
+.preview-experience-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-xs);
+  gap: var(--space-md);
+}
+
+.preview-experience-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.preview-experience-company {
+  font-style: italic;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.preview-experience-duration {
+  font-size: 0.85rem;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+.preview-experience-description {
+  font-size: 0.9rem;
+  margin: var(--space-sm) 0;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+.preview-experience-accomplishments {
+  list-style: none;
+  padding: 0 0 0 var(--space-md);
+  margin: var(--space-sm) 0 0 0;
+}
+
+.preview-experience-accomplishment {
+  font-size: 0.9rem;
+  margin-bottom: var(--space-xs);
+  color: var(--color-text-primary);
+  position: relative;
+  padding-left: var(--space-md);
+  line-height: 1.5;
+}
+
+.preview-experience-accomplishment::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Skills Section */
+.preview-skills {
+  margin-bottom: var(--space-lg);
+}
+
+.preview-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.preview-skill-tag {
+  display: inline-block;
+  background-color: #f0f0f0;
+  border: 1px solid #d0d0d0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Footer Section */
+.preview-footer {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid #d0d0d0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.preview-footer-hash {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.preview-footer-change-count {
+  text-align: right;
+}
+
+/* Print Styles */
+@media print {
+  .preview-renderer-container {
+    height: auto;
+    padding: 0;
+  }
+
+  .preview-renderer-content {
+    overflow: visible;
+    padding: 0;
+    background-color: white;
+  }
+
+  .preview-renderer-loading,
+  .preview-renderer-error,
+  .preview-renderer-empty {
+    display: none;
+  }
+
+  .preview-section {
+    page-break-inside: avoid;
+  }
+
+  .preview-skill-tag {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .preview-renderer-content {
+    padding: var(--space-lg);
+  }
+
+  .preview-header-info {
+    flex-direction: column;
+  }
+
+  .preview-experience-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .preview-experience-duration {
+    white-space: normal;
+  }
+
+  .preview-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .preview-footer-change-count {
+    text-align: left;
+  }
+
+  .preview-skills-list {
+    gap: var(--space-sm);
+  }
+
+  .preview-skill-tag {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+  }
+}
