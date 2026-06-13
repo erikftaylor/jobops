@@ -1,0 +1,50 @@
+{{!-- Default Cover Letter Template --}}
+{{#if contact}}
+<div style="margin-bottom: 20px; font-size: 11px; line-height: 1.6;">
+  {{#if contact.name}}<p style="margin: 0;">{{contact.name}}</p>{{/if}}
+  {{#if contact.email}}<p style="margin: 0;">{{contact.email}}</p>{{/if}}
+  {{#if contact.phone}}<p style="margin: 0;">{{contact.phone}}</p>{{/if}}
+  {{#if contact.location}}<p style="margin: 0;">{{contact.location}}</p>{{/if}}
+</div>
+{{/if}}
+
+{{#if date}}
+<p style="margin: 0 0 20px 0; font-size: 11px;">{{date}}</p>
+{{/if}}
+
+{{#if recipientInfo}}
+<div style="margin-bottom: 20px; font-size: 11px; line-height: 1.6;">
+  {{#if recipientInfo.companyName}}<p style="margin: 0;">{{recipientInfo.companyName}}</p>{{/if}}
+  {{#if recipientInfo.address}}<p style="margin: 0;">{{recipientInfo.address}}</p>{{/if}}
+  {{#if recipientInfo.city}}<p style="margin: 0;">{{recipientInfo.city}}</p>{{/if}}
+</div>
+{{/if}}
+
+{{#if salutation}}
+<p style="margin: 0 0 15px 0; font-size: 11px;">{{salutation}}</p>
+{{/if}}
+
+{{#if openingParagraph}}
+<p style="margin: 0 0 15px 0; font-size: 11px; line-height: 1.7; text-align: justify;">{{openingParagraph}}</p>
+{{/if}}
+
+{{#if bodyParagraphs}}
+{{#each bodyParagraphs}}
+<p style="margin: 0 0 15px 0; font-size: 11px; line-height: 1.7; text-align: justify;">{{this}}</p>
+{{/each}}
+{{/if}}
+
+{{#if closingParagraph}}
+<p style="margin: 0 0 15px 0; font-size: 11px; line-height: 1.7; text-align: justify;">{{closingParagraph}}</p>
+{{/if}}
+
+{{#if closing}}
+<p style="margin: 0 0 30px 0; font-size: 11px;">{{closing}}</p>
+{{/if}}
+
+{{#if signature}}
+<div style="font-size: 11px; line-height: 1.6;">
+  {{#if signature.name}}<p style="margin: 0;">{{signature.name}}</p>{{/if}}
+  {{#if signature.title}}<p style="margin: 0;">{{signature.title}}</p>{{/if}}
+</div>
+{{/if}}
