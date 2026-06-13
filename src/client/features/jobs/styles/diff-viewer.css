@@ -1,0 +1,90 @@
+.diff-viewer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.diff-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.diff-column-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.diff-original .diff-column-label {
+  color: #991b1b;
+}
+
+.diff-proposed .diff-column-label {
+  color: #065f46;
+}
+
+.diff-content {
+  padding: var(--space-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.diff-text {
+  font-family: "Menlo", "Monaco", "Courier New", monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+/* Inline diff segments */
+.diff-segment {
+  display: inline;
+}
+
+.diff-segment-unchanged {
+  color: var(--color-text-primary);
+}
+
+.diff-segment-added {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+.diff-segment-removed {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 2px 4px;
+  border-radius: 2px;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+/* Side-by-side layout for larger screens */
+@media (min-width: 768px) {
+  .diff-viewer {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Stacked layout for smaller screens */
+@media (max-width: 767px) {
+  .diff-viewer {
+    grid-template-columns: 1fr;
+  }
+
+  .diff-column-label {
+    display: none;
+  }
+}
