@@ -46,6 +46,26 @@
   border-color: #999;
 }
 
+.workspace-back-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Focus Visible for all interactive elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 .workspace-layout {
   display: grid;
   grid-template-columns: 60% 1fr;
@@ -100,6 +120,80 @@
   font-size: 14px;
 }
 
+/* Skeleton Loading Screens */
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  background: #e8e8e8;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-color: #e8e8e8; }
+  100% { background-color: #f5f5f5; }
+}
+
+.skeleton-score {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-score-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  skeleton: true;
+  margin: 0 auto;
+}
+
+.skeleton-score-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+}
+
+.skeleton-category-name {
+  height: 14px;
+  skeleton: true;
+  width: 60%;
+}
+
+.skeleton-category-bar {
+  height: 20px;
+  skeleton: true;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-keywords-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-keyword-item {
+  height: 80px;
+  skeleton: true;
+  border-radius: 6px;
+}
+
+.skeleton-chat-button {
+  height: 40px;
+  skeleton: true;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.skeleton-chat-response {
+  height: 200px;
+  skeleton: true;
+  border-radius: 6px;
+}
+}
+
 .workspace-error {
   padding: 16px;
   background: #fef2f2;
@@ -107,6 +201,39 @@
   border-radius: 8px;
   color: #991b1b;
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workspace-error-message {
+  flex: 1;
+}
+
+.workspace-error-recovery {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-error-retry {
+  padding: 8px 16px;
+  background: #991b1b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.workspace-error-retry:hover {
+  background: #7f1515;
+}
+
+.workspace-error-retry:focus-visible {
+  outline: 2px solid #fca5a5;
+  outline-offset: 2px;
 }
 
 /* Resume Score Component */

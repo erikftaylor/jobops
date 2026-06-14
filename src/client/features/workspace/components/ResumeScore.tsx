@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useWorkspaceScore } from '../hooks';
+import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface ResumeScoreProps {
   jobId: string | undefined;
@@ -42,13 +44,30 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
 }
 
 export function ResumeScore({ jobId }: ResumeScoreProps) {
-  const { score, isLoading, error } = useWorkspaceScore(jobId);
+  const { score, isLoading, error, reload } = useWorkspaceScore(jobId);
+
+  useEffect(() => {
+    if (score) {
+      const categoryScores = Object.fromEntries(
+        Object.entries(score.categories).map(([key, cat]) => [key, cat.score])
+      );
+      AnalyticsEvents.resumeScored(score.total, categoryScores);
+    }
+  }, [score?.total]);
 
   if (isLoading) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Resume Score</h3>
-        <div className="workspace-loading">Loading score analysis...</div>
+        <div className="skeleton-score">
+          <div className="skeleton-score-circle skeleton" />
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="skeleton-score-category">
+              <div className="skeleton-category-name skeleton" />
+              <div className="skeleton-category-bar skeleton" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -58,7 +77,21 @@ export function ResumeScore({ jobId }: ResumeScoreProps) {
       <div className="workspace-card">
         <h3 className="workspace-card-title">Resume Score</h3>
         <div className="workspace-error">
-          {error}
+          <div className="workspace-error-message">
+            <strong>Couldn't calculate score</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+              {error === 'Failed to fetch score'
+                ? 'Check your internet connection and try again.'
+                : error.includes('Claude')
+                ? 'The AI service is temporarily unavailable. Please try again in a moment.'
+                : 'An unexpected error occurred. Please refresh and try again.'}
+            </p>
+          </div>
+          <div className="workspace-error-recovery">
+            <button className="workspace-error-retry" onClick={reload}>
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
