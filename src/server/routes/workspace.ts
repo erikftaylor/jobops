@@ -200,6 +200,17 @@ function adaptToCareerModel(parsed: any): CareerModel {
   };
 }
 
+/**
+ * Load and parse career document, converting to CareerModel
+ * Consolidates repeated pattern: read → parse → adapt
+ */
+function loadCareerModel(): CareerModel {
+  const svc = getServices();
+  const careerDocContent = svc.careerDocService.readCareerDocument();
+  const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
+  return adaptToCareerModel(parsed);
+}
+
 // GET /api/workspace/:jobId - Get workspace overview
 router.get('/:jobId', async (req: Request, res: Response) => {
   try {
@@ -221,10 +232,8 @@ router.get('/:jobId', async (req: Request, res: Response) => {
       });
     }
 
-    // Get career document and adapt it
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
+    // Get career model for scoring
+    const careerModel = loadCareerModel();
 
     // Calculate score
     const score = svc.scoreService.calculateScore(careerModel, job.description);
@@ -265,10 +274,7 @@ router.get('/:jobId/score', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
-
+    const careerModel = loadCareerModel();
     const score = svc.scoreService.calculateScore(careerModel, job.description);
 
     return res.json(score);
@@ -302,9 +308,7 @@ router.get('/:jobId/keywords', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
+    const careerModel = loadCareerModel();
 
     const resumeText = [
       careerModel.fullName,
@@ -339,10 +343,7 @@ router.get('/:jobId/heatmap', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
-
+    const careerModel = loadCareerModel();
     const heatmap = svc.heatmapService.analyze(careerModel);
 
     return res.json(heatmap);
@@ -376,10 +377,7 @@ router.get('/:jobId/fit', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
-
+    const careerModel = loadCareerModel();
     const analysis = svc.fitService.analyze(careerModel, job.description);
 
     return res.json(analysis);
@@ -424,12 +422,8 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // Get career model
-    const careerDocContent = svc.careerDocService.readCareerDocument();
-    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
-    const careerModel = adaptToCareerModel(parsed);
-
-    // Calculate score and fit
+    // Get career model and calculate score and fit
+    const careerModel = loadCareerModel();
     const score = svc.scoreService.calculateScore(careerModel, job.description);
     const fit = svc.fitService.analyze(careerModel, job.description);
 
