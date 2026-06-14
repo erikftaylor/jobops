@@ -1,31 +1,83 @@
 /* Workspace Feature Styles */
 
+/* Design System: Spacing, Typography, Colors */
+:root {
+  /* Spacing Grid (8px base) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* Typography Scale */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 28px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Color Palette */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666;
+  --color-text-tertiary: #999;
+  --color-border: #e8e8e8;
+  --color-bg: #f8f9fa;
+  --color-bg-secondary: #f5f5f5;
+  --color-bg-tertiary: #f9fafb;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Importance/Severity Colors */
+  --color-critical: #991b1b;
+  --color-critical-bg: #fee2e2;
+  --color-high: #9a3412;
+  --color-high-bg: #fed7aa;
+  --color-medium: #78350f;
+  --color-medium-bg: #fef08a;
+  --color-low: #15803d;
+  --color-low-bg: #dcfce7;
+}
+
 /* Layout */
 .workspace-container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 24px;
-  background: #f8f9fa;
+  padding: var(--spacing-lg);
+  background: var(--color-bg);
   min-height: calc(100vh - 100px);
 }
 
 .workspace-header {
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .workspace-header h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .workspace-header-meta {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-md);
   align-items: center;
-  font-size: 14px;
-  color: #666;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
 }
 
 .workspace-back-btn {
@@ -69,45 +121,45 @@ textarea:focus-visible {
 .workspace-layout {
   display: grid;
   grid-template-columns: 60% 1fr;
-  gap: 24px;
+  gap: var(--spacing-lg);
   align-items: start;
 }
 
 .workspace-left-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .workspace-right-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 /* Cards */
 .workspace-card {
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  padding: var(--spacing-lg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--color-border);
 }
 
 .workspace-card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 16px 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-md) 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .workspace-card-subtitle {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 12px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
 }
 
 /* Loading & Error States */
@@ -516,23 +568,23 @@ textarea:focus-visible {
 }
 
 .keyword-badge.critical {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-critical-bg);
+  color: var(--color-critical);
 }
 
 .keyword-badge.high {
-  background: #fed7aa;
-  color: #9a3412;
+  background: var(--color-high-bg);
+  color: var(--color-high);
 }
 
 .keyword-badge.medium {
-  background: #fef08a;
-  color: #78350f;
+  background: var(--color-medium-bg);
+  color: var(--color-medium);
 }
 
 .keyword-badge.low {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-low-bg);
+  color: var(--color-low);
 }
 
 .keyword-status {
