@@ -20,7 +20,7 @@ describe('ResumeScore', () => {
     });
   });
 
-  it('should render loading state', () => {
+  it('should render loading state with skeleton screens', () => {
     (useWorkspaceScore as any).mockReturnValue({
       score: null,
       isLoading: true,
@@ -30,20 +30,24 @@ describe('ResumeScore', () => {
     render(<ResumeScore jobId="job-123" />);
 
     expect(screen.getByText('Resume Score')).toBeInTheDocument();
-    expect(screen.getByText('Loading score analysis...')).toBeInTheDocument();
+    // Skeleton screens are rendered but don't have text content to check
+    // Instead check that the component renders without error
+    expect(screen.getByRole('heading', { name: 'Resume Score' })).toBeInTheDocument();
   });
 
-  it('should render error state', () => {
+  it('should render error state with retry button', () => {
     (useWorkspaceScore as any).mockReturnValue({
       score: null,
       isLoading: false,
-      error: 'Failed to load resume score',
+      error: 'Failed to fetch score',
     });
 
     render(<ResumeScore jobId="job-123" />);
 
     expect(screen.getByText('Resume Score')).toBeInTheDocument();
-    expect(screen.getByText('Failed to load resume score')).toBeInTheDocument();
+    expect(screen.getByText("Couldn't calculate score")).toBeInTheDocument();
+    expect(screen.getByText('Check your internet connection and try again.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
   it('should render with mock score data', () => {

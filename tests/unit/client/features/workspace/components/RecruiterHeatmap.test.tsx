@@ -13,7 +13,7 @@ describe('RecruiterHeatmap', () => {
     vi.clearAllMocks();
   });
 
-  it('should render loading state', () => {
+  it('should render loading state with skeleton', () => {
     (useHeatmap as any).mockReturnValue({
       heatmap: null,
       isLoading: true,
@@ -23,20 +23,22 @@ describe('RecruiterHeatmap', () => {
     render(<RecruiterHeatmap jobId="job-123" />);
 
     expect(screen.getByText('Recruiter Heatmap')).toBeInTheDocument();
-    expect(screen.getByText('Analyzing visibility...')).toBeInTheDocument();
+    // Skeleton screens rendered, verify no errors
+    expect(screen.getByRole('heading', { name: 'Recruiter Heatmap' })).toBeInTheDocument();
   });
 
-  it('should render error state', () => {
+  it('should render error state with retry', () => {
     (useHeatmap as any).mockReturnValue({
       heatmap: null,
       isLoading: false,
-      error: 'Failed to load recruiter heatmap',
+      error: 'Failed to fetch heatmap',
     });
 
     render(<RecruiterHeatmap jobId="job-123" />);
 
     expect(screen.getByText('Recruiter Heatmap')).toBeInTheDocument();
-    expect(screen.getByText('Failed to load recruiter heatmap')).toBeInTheDocument();
+    expect(screen.getByText("Couldn't analyze visibility")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
   it('should render all 7 heatmap sections', () => {

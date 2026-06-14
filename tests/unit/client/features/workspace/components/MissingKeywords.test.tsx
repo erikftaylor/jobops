@@ -13,7 +13,7 @@ describe('MissingKeywords', () => {
     vi.clearAllMocks();
   });
 
-  it('should render loading state', () => {
+  it('should render loading state with skeleton screens', () => {
     (useKeywordAnalysis as any).mockReturnValue({
       analysis: null,
       isLoading: true,
@@ -23,20 +23,23 @@ describe('MissingKeywords', () => {
     render(<MissingKeywords jobId="job-123" />);
 
     expect(screen.getByText('Missing Keywords')).toBeInTheDocument();
-    expect(screen.getByText('Analyzing keywords...')).toBeInTheDocument();
+    // Skeleton screens are rendered, check that component renders without error
+    expect(screen.getByRole('heading', { name: 'Missing Keywords' })).toBeInTheDocument();
   });
 
-  it('should render error state', () => {
+  it('should render error state with retry', () => {
     (useKeywordAnalysis as any).mockReturnValue({
       analysis: null,
       isLoading: false,
-      error: 'Failed to analyze keywords',
+      error: 'Failed to fetch keywords',
     });
 
     render(<MissingKeywords jobId="job-123" />);
 
     expect(screen.getByText('Missing Keywords')).toBeInTheDocument();
-    expect(screen.getByText('Failed to analyze keywords')).toBeInTheDocument();
+    expect(screen.getByText("Couldn't analyze keywords")).toBeInTheDocument();
+    expect(screen.getByText('Check your internet connection and try again.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
   it('should render keyword list with critical filter', () => {

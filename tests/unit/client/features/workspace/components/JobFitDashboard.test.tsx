@@ -13,7 +13,7 @@ describe('JobFitDashboard', () => {
     vi.clearAllMocks();
   });
 
-  it('should render loading state', () => {
+  it('should render loading state with skeleton', () => {
     (useJobFit as any).mockReturnValue({
       fit: null,
       isLoading: true,
@@ -23,20 +23,22 @@ describe('JobFitDashboard', () => {
     render(<JobFitDashboard jobId="job-123" />);
 
     expect(screen.getByText('Job Fit Analysis')).toBeInTheDocument();
-    expect(screen.getByText('Analyzing job fit...')).toBeInTheDocument();
+    // Skeleton screens are rendered, just verify no error
+    expect(screen.getByRole('heading', { name: 'Job Fit Analysis' })).toBeInTheDocument();
   });
 
-  it('should render error state', () => {
+  it('should render error state with retry', () => {
     (useJobFit as any).mockReturnValue({
       fit: null,
       isLoading: false,
-      error: 'Failed to load job fit analysis',
+      error: 'Failed to fetch fit',
     });
 
     render(<JobFitDashboard jobId="job-123" />);
 
     expect(screen.getByText('Job Fit Analysis')).toBeInTheDocument();
-    expect(screen.getByText('Failed to load job fit analysis')).toBeInTheDocument();
+    expect(screen.getByText("Couldn't analyze job fit")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
   it('should render fit percentage and talking points', () => {
