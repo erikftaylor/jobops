@@ -9,7 +9,11 @@ import "../styles/jobs-page.css";
 
 type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "applied" | "closed";
 
-export default function JobsPage() {
+interface JobsPageProps {
+  onOpenWorkspace?: (jobId: string) => void;
+}
+
+export default function JobsPage({ onOpenWorkspace }: JobsPageProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
   const [filter, setFilter] = useState<JobState | "all">("all");
   const [isCreating, setIsCreating] = useState(false);
@@ -102,6 +106,7 @@ export default function JobsPage() {
           isLoading={jobsLoading}
           onStateChange={handleStateChange}
           onAnalysisRefresh={handleAnalysisRefresh}
+          onOpenWorkspace={onOpenWorkspace}
         />
       </div>
     </div>

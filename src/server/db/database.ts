@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { migrate005 } from "./migrations/005-conversation-tables.js";
 import { migrate006 } from "./migrations/006-artifact-tables.js";
 import { migrate007 } from "./migrations/007-keyword-proposals.js";
+import { migrate008 } from "./migrations/008-workspace-persistence.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,6 +70,14 @@ class DatabaseService {
 
     try {
       migrate007(this.db);
+    } catch (err: any) {
+      if (!err.message.includes("already exists")) {
+        throw err;
+      }
+    }
+
+    try {
+      migrate008(this.db);
     } catch (err: any) {
       if (!err.message.includes("already exists")) {
         throw err;

@@ -2,12 +2,21 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import HealthStatus from "./components/HealthStatus";
 import JobsPage from "./features/jobs/pages/JobsPage";
+import WorkspacePage from "./features/workspace/pages/WorkspacePage";
 import SettingsModal from "./features/settings/components/SettingsModal";
+
+interface WorkspaceViewState {
+  type: "workspace";
+  jobId: string;
+}
+
+type AppViewState = { type: "jobs" } | WorkspaceViewState;
 
 function App() {
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<AppViewState>({ type: "jobs" });
 
   useEffect(() => {
     const fetchHealth = async () => {
@@ -29,9 +38,24 @@ function App() {
     fetchHealth();
   }, []);
 
+  const handleOpenWorkspace = (jobId: string) => {
+    setCurrentView({ type: "workspace", jobId });
+  };
+
+  const handleBackToJobs = () => {
+    setCurrentView({ type: "jobs" });
+  };
+
   return (
     <div className="app">
-      <JobsPage />
+      {currentView.type === "jobs" ? (
+        <JobsPage onOpenWorkspace={handleOpenWorkspace} />
+      ) : (
+        <WorkspacePage
+          jobId={currentView.jobId}
+          onBack={handleBackToJobs}
+        />
+      )}
 
       {/* Settings Button */}
       <button

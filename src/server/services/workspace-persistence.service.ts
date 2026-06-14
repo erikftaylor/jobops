@@ -30,21 +30,30 @@ export class WorkspacePersistenceService {
    * Save dismissed keywords for a job
    */
   saveDismissedKeywords(jobId: string, keywords: string[]): void {
-    const id = uuid();
     const now = new Date().toISOString();
 
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO workspace_state (
-        id, job_id, dismissed_keywords, updated_at
-      ) VALUES (
-        COALESCE((SELECT id FROM workspace_state WHERE job_id = ?), ?),
-        ?,
-        ?,
-        ?
-      )
-    `);
+    // Check if entry exists
+    const checkStmt = this.db.prepare(`SELECT id FROM workspace_state WHERE job_id = ?`);
+    const existing = checkStmt.get(jobId) as any;
 
-    stmt.run(jobId, id, jobId, JSON.stringify(keywords), now);
+    if (existing) {
+      // Update existing row, preserving other fields
+      const updateStmt = this.db.prepare(`
+        UPDATE workspace_state
+        SET dismissed_keywords = ?, updated_at = ?
+        WHERE job_id = ?
+      `);
+      updateStmt.run(JSON.stringify(keywords), now, jobId);
+    } else {
+      // Insert new row
+      const id = uuid();
+      const insertStmt = this.db.prepare(`
+        INSERT INTO workspace_state (
+          id, job_id, dismissed_keywords, updated_at
+        ) VALUES (?, ?, ?, ?)
+      `);
+      insertStmt.run(id, jobId, JSON.stringify(keywords), now);
+    }
   }
 
   /**
@@ -83,21 +92,30 @@ export class WorkspacePersistenceService {
    * Save selected artifact variant
    */
   saveSelectedArtifact(jobId: string, artifactType: string): void {
-    const id = uuid();
     const now = new Date().toISOString();
 
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO workspace_state (
-        id, job_id, selected_artifact, updated_at
-      ) VALUES (
-        COALESCE((SELECT id FROM workspace_state WHERE job_id = ?), ?),
-        ?,
-        ?,
-        ?
-      )
-    `);
+    // Check if entry exists
+    const checkStmt = this.db.prepare(`SELECT id FROM workspace_state WHERE job_id = ?`);
+    const existing = checkStmt.get(jobId) as any;
 
-    stmt.run(jobId, id, jobId, artifactType, now);
+    if (existing) {
+      // Update existing row, preserving other fields
+      const updateStmt = this.db.prepare(`
+        UPDATE workspace_state
+        SET selected_artifact = ?, updated_at = ?
+        WHERE job_id = ?
+      `);
+      updateStmt.run(artifactType, now, jobId);
+    } else {
+      // Insert new row
+      const id = uuid();
+      const insertStmt = this.db.prepare(`
+        INSERT INTO workspace_state (
+          id, job_id, selected_artifact, updated_at
+        ) VALUES (?, ?, ?, ?)
+      `);
+      insertStmt.run(id, jobId, artifactType, now);
+    }
   }
 
   /**
@@ -203,21 +221,30 @@ export class WorkspacePersistenceService {
    * Update last score calculation timestamp
    */
   updateLastScoreCalculation(jobId: string): void {
-    const id = uuid();
     const now = new Date().toISOString();
 
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO workspace_state (
-        id, job_id, last_score_calculation, updated_at
-      ) VALUES (
-        COALESCE((SELECT id FROM workspace_state WHERE job_id = ?), ?),
-        ?,
-        ?,
-        ?
-      )
-    `);
+    // Check if entry exists
+    const checkStmt = this.db.prepare(`SELECT id FROM workspace_state WHERE job_id = ?`);
+    const existing = checkStmt.get(jobId) as any;
 
-    stmt.run(jobId, id, jobId, now, now);
+    if (existing) {
+      // Update existing row, preserving other fields
+      const updateStmt = this.db.prepare(`
+        UPDATE workspace_state
+        SET last_score_calculation = ?, updated_at = ?
+        WHERE job_id = ?
+      `);
+      updateStmt.run(now, now, jobId);
+    } else {
+      // Insert new row
+      const id = uuid();
+      const insertStmt = this.db.prepare(`
+        INSERT INTO workspace_state (
+          id, job_id, last_score_calculation, updated_at
+        ) VALUES (?, ?, ?, ?)
+      `);
+      insertStmt.run(id, jobId, now, now);
+    }
   }
 }
 

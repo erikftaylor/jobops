@@ -10,6 +10,7 @@ interface StudioPanelProps {
   isLoading?: boolean;
   onStateChange: (newState: JobState) => Promise<void>;
   onAnalysisRefresh?: () => void;
+  onOpenWorkspace?: (jobId: string) => void;
 }
 
 interface AnalysisData {
@@ -67,7 +68,7 @@ const STATE_ACTIONS: Record<JobState, { label: string; nextState: JobState }[]> 
   closed: [],
 };
 
-export default function StudioPanel({ selectedJob, isLoading, onStateChange, onAnalysisRefresh }: StudioPanelProps) {
+export default function StudioPanel({ selectedJob, isLoading, onStateChange, onAnalysisRefresh, onOpenWorkspace }: StudioPanelProps) {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -230,6 +231,24 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
           <p className="analysis-note">
             📊 See the Chat panel for full analysis details, including the gap table and terminology mapping.
           </p>
+        </div>
+      )}
+
+      {/* Workspace Button */}
+      {selectedJob.state === "analyzed" && onOpenWorkspace && (
+        <div style={{ marginBottom: "20px" }}>
+          <button
+            className="action-button"
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              color: "white",
+              fontWeight: "600",
+            }}
+            onClick={() => onOpenWorkspace(selectedJob.id)}
+          >
+            📊 Open Workspace Analysis
+          </button>
         </div>
       )}
 

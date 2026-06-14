@@ -1,0 +1,202 @@
+import { useJobFit } from '../hooks';
+
+interface JobFitDashboardProps {
+  jobId: string | undefined;
+}
+
+function CircularProgress({ value, max = 100 }: { value: number; max?: number }) {
+  const percentage = (value / max) * 100;
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="fit-circle">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="6"
+        />
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          fill="none"
+          stroke="#10b981"
+          strokeWidth="6"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="fit-circle-text">
+        <div className="fit-circle-value">{value}%</div>
+        <div className="fit-circle-percent">fit</div>
+      </div>
+    </div>
+  );
+}
+
+export function JobFitDashboard({ jobId }: JobFitDashboardProps) {
+  const { fit, isLoading, error } = useJobFit(jobId);
+
+  if (isLoading) {
+    return (
+      <div className="workspace-card">
+        <h3 className="workspace-card-title">Job Fit Analysis</h3>
+        <div className="workspace-loading">Analyzing job fit...</div>
+      </div>
+    );
+  }
+
+  if (error && !fit) {
+    return (
+      <div className="workspace-card">
+        <h3 className="workspace-card-title">Job Fit Analysis</h3>
+        <div className="workspace-error">{error}</div>
+      </div>
+    );
+  }
+
+  if (!fit) {
+    return (
+      <div className="workspace-card">
+        <h3 className="workspace-card-title">Job Fit Analysis</h3>
+        <div className="workspace-loading">No fit data available</div>
+      </div>
+    );
+  }
+
+  const confidenceColor =
+    fit.confidenceLevel === 'high' ? '#10b981' :
+    fit.confidenceLevel === 'medium' ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="workspace-card">
+      <h3 className="workspace-card-title">Job Fit Analysis</h3>
+
+      <div className="fit-dashboard">
+        {/* Overall Fit */}
+        <div className="fit-overall">
+          <CircularProgress value={fit.overallFit} max={100} />
+          <div className="fit-info">
+            <div
+              className="fit-confidence-badge"
+              style={{
+                backgroundColor: confidenceColor + '20',
+                color: confidenceColor,
+              }}
+            >
+              {fit.confidenceLevel.charAt(0).toUpperCase() +
+                fit.confidenceLevel.slice(1)}{' '}
+              Confidence
+            </div>
+            <div className="fit-info-text">
+              <strong>Overall Assessment:</strong> You are a {fit.overallFit}% fit
+              for this position. Review the details below to understand strengths
+              and gaps.
+            </div>
+          </div>
+        </div>
+
+        {/* Strong Matches */}
+        {fit.strongMatches.length > 0 && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">✓ Strong Matches</h4>
+            <div className="fit-matches-list">
+              {fit.strongMatches.map((match, idx) => (
+                <div key={idx} className="fit-match-item strong">
+                  {match}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Weak Matches */}
+        {fit.weakMatches.length > 0 && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">⚠ Weak Matches</h4>
+            <div className="fit-matches-list">
+              {fit.weakMatches.map((match, idx) => (
+                <div key={idx} className="fit-match-item weak">
+                  {match}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Rejection Risks */}
+        {fit.rejectionRisks.length > 0 && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">⚠️ Rejection Risks</h4>
+            {fit.rejectionRisks.map((risk, idx) => (
+              <div key={idx} className="fit-risk-warning">
+                • {risk}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Interview Talking Points */}
+        {fit.interviewTalkingPoints.length > 0 && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">💡 Interview Talking Points</h4>
+            <div className="fit-talking-points">
+              {fit.interviewTalkingPoints.map((point, idx) => (
+                <div key={idx} className="fit-talking-point">
+                  {point}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Positioning Angle */}
+        {fit.recommendedPositioningAngle && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">🎯 Recommended Positioning</h4>
+            <div className="fit-positioning">
+              {fit.recommendedPositioningAngle}
+            </div>
+          </div>
+        )}
+
+        {/* Success Likelihood */}
+        {fit.likelihood && (
+          <div className="fit-section">
+            <h4 className="fit-section-title">📊 Success Likelihood</h4>
+            <div className="fit-likelihood">
+              <div className="fit-likelihood-item">
+                <div className="fit-likelihood-label">Phone Screen</div>
+                <div className="fit-likelihood-value">
+                  {Math.round(fit.likelihood.phoneScreen * 100)}%
+                </div>
+                <div className="fit-likelihood-percent">Probability</div>
+              </div>
+              <div className="fit-likelihood-item">
+                <div className="fit-likelihood-label">Tech Interview</div>
+                <div className="fit-likelihood-value">
+                  {Math.round(fit.likelihood.technicalInterview * 100)}%
+                </div>
+                <div className="fit-likelihood-percent">Probability</div>
+              </div>
+              <div className="fit-likelihood-item">
+                <div className="fit-likelihood-label">Offer</div>
+                <div className="fit-likelihood-value">
+                  {Math.round(fit.likelihood.offer * 100)}%
+                </div>
+                <div className="fit-likelihood-percent">Probability</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
