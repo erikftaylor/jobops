@@ -11,7 +11,6 @@ import { KeywordAnalyzerService } from "./keyword-analyzer.service.js";
 import { HeatmapAnalyzerService } from "./heatmap-analyzer.service.js";
 import { FitAnalyzerService } from "./fit-analyzer.service.js";
 import { ArtifactCacheService } from "./artifact-cache.service.js";
-import { CareerModelService } from "./career-model.service.js";
 
 export interface RecalculationResult {
   score: ResumeScore;
@@ -43,18 +42,13 @@ export class WorkspaceRecalculationService {
   private heatmapService: HeatmapAnalyzerService;
   private fitService: FitAnalyzerService;
   private cacheService: ArtifactCacheService;
-  private careerModelService: CareerModelService;
 
-  constructor(
-    private db: Database,
-    careerModelService: CareerModelService
-  ) {
+  constructor(db: Database) {
     this.scoreService = new ResumeScoreService();
     this.keywordService = new KeywordAnalyzerService();
     this.heatmapService = new HeatmapAnalyzerService();
     this.fitService = new FitAnalyzerService();
     this.cacheService = new ArtifactCacheService(db);
-    this.careerModelService = careerModelService;
   }
 
   /**
@@ -156,8 +150,7 @@ export class WorkspaceRecalculationService {
  * Factory function to create a WorkspaceRecalculationService instance
  */
 export function createWorkspaceRecalculationService(
-  db: Database,
-  careerModelService: CareerModelService
+  db: Database
 ): WorkspaceRecalculationService {
-  return new WorkspaceRecalculationService(db, careerModelService);
+  return new WorkspaceRecalculationService(db);
 }

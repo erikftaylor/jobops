@@ -34,7 +34,7 @@ const db = getDatabase().getConnection();
 const changeGraphService = createChangeGraphService(db);
 const keywordProposalService = createKeywordProposalService(db, changeGraphService);
 const careerModelService = createCareerModelService(db, changeGraphService);
-const recalculationService = createWorkspaceRecalculationService(db, careerModelService);
+const recalculationService = createWorkspaceRecalculationService(db);
 
 // Initialize artifact generation service
 const outputContractService = new OutputContractService(db);
