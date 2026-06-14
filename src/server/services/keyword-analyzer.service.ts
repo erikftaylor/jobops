@@ -1,4 +1,5 @@
 import type { MissingKeyword, KeywordAnalysis } from '../../shared/types';
+import { parseKeywords } from '../utils/keyword-parser.js';
 
 export class KeywordAnalyzerService {
   private criticalIndicators = ['required', 'must have', 'essential'];
@@ -68,10 +69,8 @@ export class KeywordAnalyzerService {
   }
 
   private extractKeywords(text: string): string[] {
-    return text
-      .toLowerCase()
-      .split(/[\s,\-\n]+/)
-      .filter(word => word.length > 3 && !this.isCommonWord(word))
+    return parseKeywords(text.toLowerCase(), { minLength: 3 })
+      .filter(word => !this.isCommonWord(word))
       .slice(0, 50); // Limit to top 50
   }
 

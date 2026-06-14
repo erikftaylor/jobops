@@ -11,6 +11,7 @@ import { KeywordAnalyzerService } from "./keyword-analyzer.service.js";
 import { HeatmapAnalyzerService } from "./heatmap-analyzer.service.js";
 import { FitAnalyzerService } from "./fit-analyzer.service.js";
 import { ArtifactCacheService } from "./artifact-cache.service.js";
+import { careerModelToText } from "../utils/career-text.js";
 
 export interface RecalculationResult {
   score: ResumeScore;
@@ -67,7 +68,7 @@ export class WorkspaceRecalculationService {
     this.invalidateCache(job.id);
 
     // Convert CareerModel to resume text for keyword analysis
-    const resumeText = this.careerModelToText(careerModel);
+    const resumeText = careerModelToText(careerModel, { useCompanyFormat: false });
 
     // Run all analyses in parallel
     const [score, keywords, heatmap, fit] = await Promise.all([
@@ -133,17 +134,6 @@ export class WorkspaceRecalculationService {
   /**
    * Convert CareerModel to resume text for keyword analysis
    */
-  private careerModelToText(careerModel: CareerModel): string {
-    const parts = [
-      careerModel.fullName,
-      careerModel.sections.summary,
-      (careerModel.sections.experience || [])
-        .map((e) => `${e.title} ${e.description}`)
-        .join(" "),
-      (careerModel.sections.skills || []).join(" "),
-    ];
-    return parts.filter(Boolean).join(" ");
-  }
 }
 
 /**

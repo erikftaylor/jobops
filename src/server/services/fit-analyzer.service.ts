@@ -1,4 +1,6 @@
 import type { CareerModel, JobFitAnalysis, ExperienceGap } from '../../shared/types';
+import { careerModelToText } from '../utils/career-text.js';
+import { parseKeywords } from '../utils/keyword-parser.js';
 
 export class FitAnalyzerService {
   analyze(careerModel: CareerModel, jobDescription: string): JobFitAnalysis {
@@ -46,8 +48,8 @@ export class FitAnalyzerService {
 
   private findWeakMatches(careerModel: CareerModel, jobDescription: string): string[] {
     const weak: string[] = [];
-    const jobKeywords = jobDescription.split(/[\s,]+/).filter(w => w.length > 4);
-    const resumeText = this.careerToText(careerModel);
+    const jobKeywords = parseKeywords(jobDescription, { minLength: 4 });
+    const resumeText = careerModelToText(careerModel, { includeMetrics: true, useCompanyFormat: true });
 
     jobKeywords.forEach(keyword => {
       const count = (resumeText.match(new RegExp(keyword, 'gi')) || []).length;
@@ -89,7 +91,7 @@ export class FitAnalyzerService {
 
   private identifyExperienceGaps(careerModel: CareerModel, jobDescription: string): ExperienceGap[] {
     const gaps: ExperienceGap[] = [];
-    const resumeText = this.careerToText(careerModel);
+    const resumeText = careerModelToText(careerModel, { includeMetrics: true, useCompanyFormat: true });
 
     const criticalRequirements = [
       { keyword: 'kubernetes', name: 'Kubernetes' },
@@ -160,15 +162,4 @@ export class FitAnalyzerService {
     return 'Lead with recent relevant projects and achievements';
   }
 
-  private careerToText(careerModel: CareerModel): string {
-    const parts = [
-      careerModel.fullName,
-      careerModel.sections.summary,
-      (careerModel.sections.experience || [])
-        .map(e => `${e.title} at ${e.company} ${e.description} ${(e.metrics || []).join(' ')}`)
-        .join(' '),
-      (careerModel.sections.skills || []).join(' '),
-    ];
-    return parts.filter(Boolean).join(' ');
-  }
 }

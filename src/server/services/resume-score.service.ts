@@ -1,4 +1,6 @@
 import type { CareerModel, ResumeScore, ScoreCategory } from '../../shared/types';
+import { careerModelToText } from '../utils/career-text.js';
+import { parseKeywords } from '../utils/keyword-parser.js';
 
 export class ResumeScoreService {
   calculateScore(careerModel: CareerModel, jobDescription: string): ResumeScore {
@@ -34,7 +36,7 @@ export class ResumeScoreService {
   private scoreAtsKeywordMatch(careerModel: CareerModel, jobDescription: string): ScoreCategory {
     // Extract meaningful keywords - focus on important tech terms
     const skills = careerModel.sections.skills || [];
-    const resumeText = this.resumeToText(careerModel).toLowerCase();
+    const resumeText = careerModelToText(careerModel, { includeEducation: true, useCompanyFormat: true }).toLowerCase();
 
     // Match job description against resume skills directly
     const jobLower = jobDescription.toLowerCase();
@@ -51,9 +53,7 @@ export class ResumeScoreService {
     });
 
     // Also check for keywords in job description that match skills
-    const jobKeywords = jobLower
-      .split(/[\s,\-\n.;:()]+/)
-      .filter(w => w.length > 3)
+    const jobKeywords = parseKeywords(jobLower, { minLength: 3 })
       .filter(w => !['required', 'engineer', 'experience', 'needed', 'looking', 'expert', 'skills', 'with', 'have', 'must', 'nice', 'able', 'will', 'also', 'your', 'this', 'that'].includes(w));
 
     const uniqueJobKeywords = new Set(jobKeywords);
@@ -202,14 +202,4 @@ export class ResumeScoreService {
     return recommendations;
   }
 
-  private resumeToText(careerModel: CareerModel): string {
-    const parts = [
-      careerModel.fullName,
-      careerModel.sections.summary,
-      (careerModel.sections.experience || []).map(exp => `${exp.title} at ${exp.company} ${exp.description}`).join(' '),
-      (careerModel.sections.skills || []).join(' '),
-      (careerModel.sections.education || []).map(edu => `${edu.school} ${edu.degree}`).join(' '),
-    ];
-    return parts.filter(Boolean).join(' ');
-  }
 }
