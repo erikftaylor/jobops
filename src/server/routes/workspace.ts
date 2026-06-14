@@ -3,8 +3,10 @@ import { ResumeScoreService } from '../services/resume-score.service.js';
 import { KeywordAnalyzerService } from '../services/keyword-analyzer.service.js';
 import { HeatmapAnalyzerService } from '../services/heatmap-analyzer.service.js';
 import { FitAnalyzerService } from '../services/fit-analyzer.service.js';
+import { RecruiterChatService } from '../services/recruiter-chat.service.js';
 import { createJobService } from '../services/job.service.js';
 import { createCareerDocService } from '../services/career-doc.service.js';
+import { getClaudeService } from '../services/claude.service.js';
 import type { CareerModel } from '../../shared/types.js';
 
 const router = Router();
@@ -12,6 +14,7 @@ const scoreService = new ResumeScoreService();
 const keywordService = new KeywordAnalyzerService();
 const heatmapService = new HeatmapAnalyzerService();
 const fitService = new FitAnalyzerService();
+const recruiterChatService = new RecruiterChatService(getClaudeService());
 const jobService = createJobService();
 const careerDocService = createCareerDocService();
 
@@ -232,6 +235,65 @@ router.get('/:jobId/fit', async (req: Request, res: Response) => {
     return res.status(500).json({
       code: 'INTERNAL_ERROR',
       message: 'Failed to analyze fit',
+    });
+  }
+});
+
+// POST /api/workspace/:jobId/chat - Answer recruiter questions
+router.post('/:jobId/chat', async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const { questionId } = req.body;
+
+    // Validate question ID
+    const validQuestions = ['worry', 'weakest', 'interview', 'improve-first'];
+    if (!questionId || !validQuestions.includes(questionId)) {
+      return res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: `Invalid question ID. Must be one of: ${validQuestions.join(', ')}`,
+      });
+    }
+
+    // Get job
+    const job = jobService.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Job with id '${jobId}' not found`,
+      });
+    }
+
+    if (!job.description) {
+      return res.status(400).json({
+        code: 'MISSING_DESCRIPTION',
+        message: 'Job description is required',
+      });
+    }
+
+    // Get career model
+    const careerDocContent = careerDocService.readCareerDocument();
+    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerModel = adaptToCareerModel(parsed);
+
+    // Calculate score and fit
+    const score = scoreService.calculateScore(careerModel, job.description);
+    const fit = fitService.analyze(careerModel, job.description);
+
+    // Answer the question
+    const answer = await recruiterChatService.answerQuestion(
+      questionId,
+      careerModel,
+      job.description,
+      score,
+      fit
+    );
+
+    return res.json(answer);
+  } catch (error) {
+    console.error('Chat error:', error);
+    return res.status(500).json({
+      code: 'AI_SERVICE_ERROR',
+      message: 'Failed to generate response',
     });
   }
 });

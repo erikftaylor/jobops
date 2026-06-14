@@ -408,3 +408,49 @@ export interface JobFitAnalysis {
     offer: number;
   };
 }
+
+// Recruiter Chat - Structured Q&A for resume feedback
+export interface RecruiterQuestion {
+  id: string;
+  question: string;
+  description: string;
+}
+
+export interface SuggestedChange {
+  target: string; // "skills", "summary", "experience", "education"
+  operation: string; // "add", "remove", "modify"
+  value: string;
+  reasoning: string;
+}
+
+export interface RecruiterAnswer {
+  question: string;
+  answer: string;
+  risks: string[];
+  suggestedChanges: SuggestedChange[];
+  followUpQuestions: string[];
+  confidence: number; // 0-1
+}
+
+export const RECRUITER_QUESTIONS: RecruiterQuestion[] = [
+  {
+    id: 'worry',
+    question: 'What would worry a recruiter?',
+    description: 'Identify gaps and weaknesses that could cause rejection',
+  },
+  {
+    id: 'weakest',
+    question: 'Where is my resume weakest?',
+    description: 'Find the lowest-scoring areas and how to improve them',
+  },
+  {
+    id: 'interview',
+    question: 'Would this likely get an interview?',
+    description: 'Honest assessment of interview likelihood',
+  },
+  {
+    id: 'improve-first',
+    question: 'What should I improve first?',
+    description: 'Prioritized list of improvements for maximum impact',
+  },
+];
