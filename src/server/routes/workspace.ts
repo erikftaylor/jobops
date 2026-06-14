@@ -7,6 +7,10 @@ import { RecruiterChatService } from '../services/recruiter-chat.service.js';
 import { createJobService } from '../services/job.service.js';
 import { createCareerDocService } from '../services/career-doc.service.js';
 import { getClaudeService } from '../services/claude.service.js';
+import { createChangeGraphService } from '../services/change-graph.service.js';
+import { createKeywordProposalService } from '../services/keyword-proposal.service.js';
+import { getDatabase } from '../db/database.js';
+import { eventBus, WorkspaceEvents } from '../services/event-bus.service.js';
 import type { CareerModel } from '../../shared/types.js';
 
 const router = Router();
@@ -17,6 +21,11 @@ const fitService = new FitAnalyzerService();
 const recruiterChatService = new RecruiterChatService(getClaudeService());
 const jobService = createJobService();
 const careerDocService = createCareerDocService();
+
+// Initialize keyword proposal service
+const db = getDatabase().getConnection();
+const changeGraphService = createChangeGraphService(db);
+const keywordProposalService = createKeywordProposalService(db, changeGraphService);
 
 /**
  * Adapter to convert ParsedCareerDocument to simplified CareerModel for scoring services
@@ -294,6 +303,148 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
     return res.status(500).json({
       code: 'AI_SERVICE_ERROR',
       message: 'Failed to generate response',
+    });
+  }
+});
+
+// POST /api/workspace/:jobId/keywords/propose - Propose a keyword for a job
+router.post('/:jobId/keywords/propose', async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const { keyword, suggestedLanguage, target } = req.body;
+
+    // Validate inputs
+    if (!keyword || !suggestedLanguage || !target) {
+      return res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'keyword, suggestedLanguage, and target are required',
+      });
+    }
+
+    if (!['resume', 'cover_letter', 'both'].includes(target)) {
+      return res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'target must be one of: resume, cover_letter, both',
+      });
+    }
+
+    // Verify job exists
+    const job = jobService.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Job with id '${jobId}' not found`,
+      });
+    }
+
+    // Create proposal
+    const proposal = keywordProposalService.proposeKeyword(
+      jobId,
+      keyword,
+      suggestedLanguage,
+      target
+    );
+
+    return res.status(201).json(proposal);
+  } catch (error) {
+    console.error('Error proposing keyword:', error);
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to propose keyword',
+    });
+  }
+});
+
+// POST /api/workspace/:jobId/keywords/:keywordId/accept - Accept a keyword proposal
+router.post('/:jobId/keywords/:keywordId/accept', async (req: Request, res: Response) => {
+  try {
+    const { jobId, keywordId } = req.params;
+
+    // Verify job exists
+    const job = jobService.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Job with id '${jobId}' not found`,
+      });
+    }
+
+    // Get and verify proposal belongs to this job
+    const proposal = keywordProposalService.getProposalById(keywordId);
+    if (!proposal) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Keyword proposal with id '${keywordId}' not found`,
+      });
+    }
+
+    if (proposal.jobId !== jobId) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Proposal does not belong to this job',
+      });
+    }
+
+    // Accept the proposal
+    const accepted = keywordProposalService.acceptProposal(keywordId);
+
+    // Emit event for recalculation
+    eventBus.emit(WorkspaceEvents.CHANGE_ACCEPTED, {
+      jobId,
+      changeNodeId: proposal.changeNodeId,
+      keyword: proposal.keyword,
+      timestamp: new Date().toISOString(),
+    });
+
+    return res.json(accepted);
+  } catch (error) {
+    console.error('Error accepting keyword:', error);
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to accept keyword',
+    });
+  }
+});
+
+// POST /api/workspace/:jobId/keywords/:keywordId/ignore - Ignore a keyword proposal
+router.post('/:jobId/keywords/:keywordId/ignore', async (req: Request, res: Response) => {
+  try {
+    const { jobId, keywordId } = req.params;
+
+    // Verify job exists
+    const job = jobService.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Job with id '${jobId}' not found`,
+      });
+    }
+
+    // Get and verify proposal belongs to this job
+    const proposal = keywordProposalService.getProposalById(keywordId);
+    if (!proposal) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Keyword proposal with id '${keywordId}' not found`,
+      });
+    }
+
+    if (proposal.jobId !== jobId) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Proposal does not belong to this job',
+      });
+    }
+
+    // Ignore the proposal
+    const ignored = keywordProposalService.ignoreProposal(keywordId);
+
+    return res.json(ignored);
+  } catch (error) {
+    console.error('Error ignoring keyword:', error);
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to ignore keyword',
     });
   }
 });

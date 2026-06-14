@@ -432,6 +432,20 @@ export interface RecruiterAnswer {
   confidence: number; // 0-1
 }
 
+// Keyword Proposal - track proposed keywords and their acceptance status
+export interface KeywordProposal {
+  id: string;
+  jobId: string;
+  keyword: string;
+  suggestedLanguage: string;
+  target: "resume" | "cover_letter" | "both";
+  status: "pending" | "accepted" | "ignored";
+  changeNodeId?: string;
+  createdAt: string;
+  acceptedAt?: string;
+  ignoredAt?: string;
+}
+
 export const RECRUITER_QUESTIONS: RecruiterQuestion[] = [
   {
     id: 'worry',
