@@ -284,7 +284,7 @@ Acceptance Criteria:
 | **FitAnalysisService** | Analyze career vs. job, identify strengths/gaps/keywords | (existing, already implemented) |
 | **PromptBuilderService** | Construct Claude prompts with fit analysis, career data, job analysis | JSON schema validation |
 | **ArtifactService** | Persist, retrieve, version artifacts; manage lifecycle | SQLite, TypeScript validation |
-| **PDFExportService** | Convert artifact text to PDF bytes | pdfkit (library) |
+| **PDFExportService** | Render artifact JSON → HTML template → PDF bytes. Ensures ATS-safe layout (single column, standard typography, no graphics). Fallback: plain text if rendering fails. | pdfkit (library) |
 | **JSONValidationService** | Validate Claude JSON responses match expected schema | zod (TypeScript validation) |
 
 ### Separation of Concerns
@@ -344,8 +344,8 @@ CREATE TABLE job_artifacts (
   model TEXT NOT NULL,                    -- 'claude-sonnet-4-20250514' (track which model)
   
   -- Content
-  json_content JSONB NOT NULL,            -- Full response from Claude (for debugging, regeneration)
-  rendered_text TEXT NOT NULL,            -- Plain text version (for copying, PDFs)
+  json_content TEXT NOT NULL,             -- Full response from Claude as JSON (for debugging, regeneration). Validated with Zod before persistence.
+  rendered_text TEXT NOT NULL,            -- Plain text version (for copying, fallback display)
   
   -- Lifecycle
   status TEXT NOT NULL,                   -- 'draft' | 'ready' | 'archived'
@@ -359,6 +359,41 @@ CREATE TABLE job_artifacts (
   UNIQUE(job_id, artifact_type, version),
   FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
+
+**Note on JSON storage:** SQLite stores JSON as TEXT. Content is serialized/deserialized with JSON library. Validation with Zod ensures schema compliance before persistence. Optional enhancement (future): Generated columns or JSON functions for querying JSON fields if analytics needs evolve.
+
+### Future Table: `artifact_generation_runs` (Enhancement, not in V1)
+
+**Purpose:** Track all generation attempts, including failures, retries, and performance data.
+
+**Status:** Design documented here for future use; not implemented in V1.
+
+**Schema (future):**
+```sql
+CREATE TABLE artifact_generation_runs (
+  id TEXT PRIMARY KEY,
+  artifact_id TEXT,                      -- NULL if generation failed (no artifact created)
+  job_id TEXT NOT NULL,
+  artifact_type TEXT NOT NULL,
+  status TEXT NOT NULL,                  -- 'success' | 'validation_failed' | 'api_error' | 'timeout'
+  positioning TEXT,
+  prompt_version INTEGER,
+  model TEXT,
+  attempt_number INTEGER,                -- 1st attempt, retry 1, retry 2, etc.
+  error_code TEXT,                       -- e.g., 'JSON_SCHEMA_MISMATCH', 'API_TIMEOUT', 'RATE_LIMITED'
+  error_message TEXT,                    -- User-safe error message
+  latency_ms INTEGER,                    -- How long did Claude take?
+  created_at TEXT NOT NULL
+);
+```
+
+**Use cases (future):**
+- Analytics: success rate by positioning, model, time of day
+- Debugging: understand why generations fail
+- Retries: automatically retry failed generations with backoff
+- Cost optimization: track latency and token usage per artifact type
+
+Not needed for V1; revisit after Phase 2 if observability requirements emerge.
 
 -- Indexes
 CREATE INDEX idx_job_artifacts_job_id ON job_artifacts(job_id);
@@ -634,16 +669,21 @@ STAGE 6: Validate JSON Response                       │
 ├─ Schema:                                            │
 │  ├─ analysis { positioning, keywords[], gaps[] }   │
 │  └─ resume { summary, skills, experience[], edu }  │
-├─ If invalid → return error, don't persist          │
+├─ If validation fails:                               │
+│  ├─ Return structured error to UI                  │
+│  ├─ Log only safe metadata (error type, latency)    │
+│  ├─ DO NOT persist broken artifact                  │
+│  └─ User can immediately regenerate                 │
 │                                                     │
 └─────────────────────────────────────────────────────┤
                                                       │
-STAGE 7: Persist Artifact                             │
+STAGE 7: Persist Artifact (Only on Success)           │
 │                                                     │
 ├─ ArtifactService.create()                           │
-├─ Store full JSON response                           │
+├─ Store full validated JSON response                 │
 ├─ Store rendered (plain text) version                │
 ├─ Record: model, prompt_version, career_doc_version │
+├─ Set status: 'ready'                                │
 │                                                     │
 └─────────────────────────────────────────────────────┤
                                                       │
@@ -720,9 +760,9 @@ OUTPUT FORMAT (JSON):
 
 1. **Staged extraction** — Each stage adds context (career → job → fit → prompt)
 2. **No hallucination** — System prompt + career profile as source of truth
-3. **Deterministic** — Same inputs always produce same output (reproducible)
+3. **Traceable & reproducible** — All generation context (career doc version, prompt version, model, positioning) recorded for auditability; same inputs + context allow regeneration
 4. **Debuggable** — Each stage's output is stored and auditable
-5. **Versionable** — If prompt improves, can regenerate old artifacts with new prompt
+5. **Versionable** — If prompt improves, can regenerate old artifacts with new prompt version
 6. **Extensible** — Same pipeline for cover letters, interview guides, etc. (just different prompts)
 
 ---
@@ -940,6 +980,39 @@ Content-Disposition: attachment; filename="John_Doe_Resume.pdf"
 **Validation**
 - Artifact must exist and have `status: 'ready'`
 - User must own the job
+
+### PDF Rendering Architecture
+
+**Overview:** PDF export uses structured rendering, not raw text.
+
+**Data Flow:**
+```
+Artifact JSON
+  ↓
+PDFExportService.render()
+  ├─ Select template (resume, cover letter, etc.)
+  ├─ Render to HTML using template
+  │  └─ Template enforces: single column, standard headings,
+  │     readable typography, no graphics, no icons
+  ├─ Convert HTML → PDF (pdfkit or headless browser)
+  └─ Return PDF bytes
+
+Fallback: If PDF generation fails, offer rendered_text for copy/paste
+```
+
+**Why templated rendering:**
+- **Consistency:** Same artifact → same PDF every time
+- **ATS-safe:** Template controls layout; no user formatting that could break ATS
+- **Debuggable:** Can inspect generated HTML
+- **Extensible:** Easy to add new templates (cover letter, interview guide, etc.)
+- **Accessible:** Typography and spacing optimized for readability
+
+**Template components (resume example):**
+- Header: Name, contact info (no graphics)
+- Sections: Summary, Skills, Experience, Education (standard headings)
+- Typography: System fonts, 11-12pt, single column
+- Spacing: 0.5" margins, consistent line height
+- No: tables, columns, icons, colors, images, borders
 
 ---
 
@@ -1395,12 +1468,14 @@ app.post('/artifacts/generate', async (req, res) => {
 **Mitigation:**
 - System prompt explicitly: "NEVER hallucinate"
 - Career profile as sole source of truth
-- Validation layer checks for suspicious patterns:
-  - Dates that don't match career profile
-  - Companies not mentioned in profile
-  - Skills not listed in profile
-  - Metrics without supporting context
+- Validation layer performs source-consistency checks:
+  - Are companies mentioned in career profile?
+  - Are skills listed in career profile?
+  - Do dates align with employment history?
+  - Are metrics grounded in actual accomplishments?
 - If suspicious content detected: return error, don't persist
+
+**Limitations:** Validation can catch obvious consistency issues, but **cannot guarantee perfect factual verification**. Users remain responsible for reviewing generated content before submission. All preview flows must include clear guidance: "Please review carefully—you're responsible for accuracy."
 
 **Code:**
 ```typescript
@@ -1996,12 +2071,15 @@ describe('Artifact Snapshots', () => {
 **Mitigation:**
 - System prompt explicitly: never hallucinate
 - Career profile is sole source of truth
-- Validation layer detects suspicious content:
+- Validation layer detects obvious inconsistencies:
   - Companies not in profile
   - Skills not listed
   - Dates that don't match
   - Metrics without context
 - If suspicious: return error, don't persist
+- UI enforces preview before download with disclaimer: "Please review for accuracy before using"
+- Cannot guarantee hallucination-free output; validation catches obvious issues only
+- User bears final responsibility for accuracy of submitted content
 
 **Risk: Bias in positioning or recommendations**
 - Claude suggests positioning angles that favor certain backgrounds
@@ -2057,23 +2135,23 @@ describe('Artifact Snapshots', () => {
 | Avg artifacts per user | 2.5 per month | Shows users find value in regeneration |
 | % of generated artifacts marked "preferred" | 60% | Shows users are committing to generated content |
 
-### Quality Metrics
+### Quality Metrics (Phase 2 Success Gates)
 
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| Resume generation success rate | 95%+ | Shows Claude integration is reliable |
-| JSON validation pass rate | 99%+ | Shows Claude responses are well-formed |
-| ATS pass rate (simulated) | 90%+ | Shows generated resumes pass ATS parsing |
-| Hallucination detection rate | 0 slips | Shows validation layer is effective |
+| Successful generation completion | 95%+ | Shows Claude integration is reliable |
+| JSON validation pass rate | 98%+ | Shows Claude responses match schema |
+| Persisted artifacts with hallucinations | 0 known | Validation layer catches obvious issues |
+| Median generation latency | < 15s | Users don't abandon during wait |
 
 ### User Experience Metrics
 
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| Average generation latency | < 12s | Users don't abandon during wait |
-| % users who view preview before download | 90%+ | Shows users review before using |
-| % users who regenerate | 30% per month | Shows iteration happens |
+| % users who view preview before download | 90%+ (enforced) | Required UI flow; users review before use |
+| % users who regenerate | 30% per month | Shows value in iteration/positioning |
 | User satisfaction (survey) | 4.5+/5 | Users find feature valuable |
+| User-reported accuracy issues | < 5% of users | Self-reported hallucination or errors |
 
 ### Business Metrics (Future)
 
@@ -2087,72 +2165,86 @@ describe('Artifact Snapshots', () => {
 
 ## 20. Phased Rollout
 
-### Phase 1: Fit Analysis (Foundation)
+### Phase 1: Data Model & Artifact Infrastructure + Fit Analysis
 **Duration:** 2 weeks  
-**Goal:** Establish analysis pipeline
+**Goal:** Build foundational artifact system and analysis pipeline
 
 **Deliverables:**
+- job_artifacts table (full schema with versioning)
 - FitAnalysisService (enhanced)
 - PromptBuilderService.buildAnalysisPrompt()
-- job_artifacts table (schema only)
+- ArtifactService (CRUD operations, version auto-increment)
+- JSONValidationService
 
-**Testing:** Unit + integration tests for analysis
+**Testing:** Unit + integration tests for artifact persistence and fit analysis
 
 **Rollout:** Internal testing only (not visible to users)
 
+**Success Gate:** 
+- 100% of artifacts successfully stored and retrieved
+- Version auto-increment works correctly (V1, V2, V3...)
+
 ---
 
-### Phase 2: Resume Generation
+### Phase 2: Resume Generation with Versioning
 **Duration:** 3 weeks  
-**Goal:** Generate tailored resumes
+**Goal:** Generate tailored, versioned resumes with persistence
 
 **Deliverables:**
 - ResumeGeneratorService
 - POST /api/jobs/:jobId/artifacts/generate endpoint
-- ArtifactService (CRUD + versioning)
 - ResumePreviewModal (React component)
-- PDFExportService
+- PDFExportService with HTML template rendering
+- Hallucination validation checks
 
-**Testing:** E2E tests for full generation flow
+**Testing:** E2E tests for full generation flow, artifact versioning, validation
 
 **Rollout:** Gradual rollout (10% of users) → measure success → 100%
 
-**Success Gate:** 95%+ generation success rate, < 1 hallucination in 100 samples
+**Success Gates:** 
+- 95%+ successful generation completion
+- 98%+ JSON validation pass rate
+- 0 known persisted artifacts with unsupported companies/titles/dates
+- Median generation latency under 15 seconds
+- User preview required before PDF download (enforced in UI)
 
 ---
 
 ### Phase 3: Cover Letter Generation
 **Duration:** 2 weeks  
-**Goal:** Auto-generate cover letters
+**Goal:** Auto-generate cover letters using same artifact infrastructure
 
 **Deliverables:**
 - CoverLetterGeneratorService
 - PromptBuilderService.buildCoverLetterPrompt()
 - CoverLetterPreviewModal (React component)
+- Cover letter HTML template for PDF export
 
 **Testing:** Same as resume; prompt regression tests
 
 **Rollout:** Gradual (10% → 100%)
 
+**Success Gates:** Same as Phase 2 (generation success, validation, latency)
+
 ---
 
-### Phase 4: Artifact Versioning & Regeneration
+### Phase 4: Regeneration UX & Positioning Controls
 **Duration:** 2 weeks  
-**Goal:** Support version history and regeneration
+**Goal:** Allow users to regenerate with different positioning angles
 
 **Deliverables:**
-- VersionList UI component
-- RegenerateModal (positioning selector)
-- GET /api/jobs/:jobId/artifacts endpoint
-- Version comparison view
+- RegenerateModal (positioning selector with options)
+- GET /api/jobs/:jobId/artifacts endpoint (list all versions)
+- VersionList UI component (show V1, V2, V3... with metadata)
+- "Mark as Preferred" functionality
 
-**Testing:** E2E tests for version selection, regeneration
+**Testing:** E2E tests for version selection, regeneration, preference marking
 
 **Rollout:** Feature flag; enable for all
 
 ---
 
-### Phase 5: Comparison & Analytics
+### Phase 5: Version Comparison & Analytics
 **Duration:** 2 weeks  
 **Goal:** Help users compare versions and understand what works
 
