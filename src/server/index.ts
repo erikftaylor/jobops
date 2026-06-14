@@ -1,3 +1,4 @@
+import "dotenv/config.js";
 import express, { Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { initDatabase, getDatabase } from "./db/database.js";
@@ -57,7 +58,7 @@ app.get("/health", (_req: Request, res: Response) => {
     const dbHealth = db.health();
     const cvHealth = getMasterCVHealth();
 
-    const apiKeyConfigured = !!process.env.CLAUDE_API_KEY;
+    const apiKeyConfigured = !!process.env.ANTHROPIC_API_KEY;
 
     res.json({
       status: "healthy",
@@ -70,7 +71,7 @@ app.get("/health", (_req: Request, res: Response) => {
       master_career_document: cvHealth,
       claude_api: {
         key_configured: apiKeyConfigured,
-        warning: !apiKeyConfigured ? "CLAUDE_API_KEY not set" : null,
+        warning: !apiKeyConfigured ? "ANTHROPIC_API_KEY not set" : null,
       },
     });
   } catch (err: any) {
