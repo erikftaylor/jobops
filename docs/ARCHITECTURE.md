@@ -1,13 +1,22 @@
 # JobOps Architecture
 
 **Version:** 1.0.0-rc1  
+**Audience:** All engineers and AI agents  
+**Purpose:** Single source of truth for system design and integration  
 **Last Updated:** 2026-06-13
 
 ---
 
 ## System Overview
 
-JobOps is an AI-powered job application command center built with a modern, modular architecture. The system separates concerns cleanly between client (React), server (Express), and services (Claude API, analysis).
+JobOps is an AI-powered job opportunity analysis platform designed for senior-level recruiters. The system analyzes job descriptions against a recruiter's career profile, identifies skill gaps, generates optimization suggestions, and produces multiple resume variants for comparison.
+
+**Core value:** Recruiters make faster, more confident job decisions with AI-powered analysis backed by their actual experience.
+
+The architecture emphasizes three principles:
+1. **Separation of concerns:** Client (UI), Services (logic), Data (persistence)
+2. **Immutability:** Career Profile data never mutated in place; all changes tracked in ChangeGraph
+3. **Service ownership:** Business logic lives in services, not components or controllers
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -35,6 +44,71 @@ JobOps is an AI-powered job application command center built with a modern, modu
     │Database │    │  (Server-side)  │    │ (Outputs) │
     └─────────┘    └─────────────────┘    └───────────┘
 ```
+
+---
+
+## Core Architectural Concepts
+
+### 1. Immutable Career Model
+
+The Career Profile is the single source of truth for recruiter experience. It is never mutated directly:
+
+**Structure:**
+- `fullName`: Recruiter's name
+- `sections`: Experience, skills, education, summary (readonly arrays)
+- `metadata`: Hash (version), source file, created_at, updated_at
+- **Hash:** Computed content digest used for cache invalidation and change detection
+
+**Why immutable:**
+- Enables deterministic analysis (same Career Profile + Job = same score)
+- Creates complete audit trail of all changes
+- Prevents accidental data corruption
+- Simplifies concurrency (no race conditions)
+
+**How changes work:**
+```
+ChangeNode created → awaits approval → if approved: ChangeGraph records it → score recalculates
+```
+
+### 2. Service-Oriented Architecture
+
+Services are stateless, reusable business logic units. No service directly mutates data from another service.
+
+**Service responsibilities:**
+- Input validation
+- Business logic execution
+- Result persistence (if needed)
+- Error handling
+
+**Service pattern:**
+```typescript
+interface Service {
+  // Stateless: same input always produces same output
+  // Pure: doesn't mutate inputs
+  // Observable: throws or returns errors, never silent failures
+}
+```
+
+### 3. Recruiter Workspace as Consumer
+
+The workspace (React UI) is purely a presentation and orchestration layer:
+- Displays service results
+- Handles user interactions
+- Routes commands to services
+- Shows loading/error states
+
+**Workspace never:**
+- Calculates scores directly
+- Modifies Career Profile
+- Manages ChangeGraph
+- Generates artifacts without ArtifactEngine
+
+### 4. Deterministic Artifact Generation
+
+Resume generation produces consistent output from same inputs:
+- Same Career Profile + Job + Strategy → Same resume output
+- Enables caching: key = `(careerModel.hash, job.id, strategy)`
+- Allows comparing variants side-by-side with confidence
 
 ---
 
@@ -81,6 +155,90 @@ JobOps is an AI-powered job application command center built with a modern, modu
    - Chat history, dismissed keywords, selections load
    - UI reconstructs previous analysis state
    - User can continue from where they left off
+
+---
+
+## Folder Structure
+
+```
+jobber-app/
+├── src/
+│   ├── shared/
+│   │   ├── types.ts                    # Shared types (Career Model, Job, etc.)
+│   │   └── constants.ts                # Shared constants
+│   │
+│   ├── server/
+│   │   ├── index.ts                    # Express app setup
+│   │   ├── routes/                     # API endpoints
+│   │   │   ├── health.ts               # GET /health
+│   │   │   ├── jobs.ts                 # /api/jobs endpoints
+│   │   │   ├── workspace.ts            # /api/workspace/:id endpoints
+│   │   │   └── artifacts.ts            # /api/artifacts endpoints
+│   │   │
+│   │   └── services/                   # Business logic (no side effects)
+│   │       ├── CareerModelService.ts   # Load career profile
+│   │       ├── JobService.ts           # Create, read, update jobs
+│   │       ├── WorkspaceService.ts     # Load/persist workspace state
+│   │       ├── AnalysisServices.ts     # ResumeScorerService, KeywordAnalyzer, etc.
+│   │       ├── ClaudeService.ts        # Claude API integration
+│   │       ├── ArtifactEngine.ts       # Resume generation (deterministic)
+│   │       └── ChangeGraphService.ts   # Immutable change tracking
+│   │
+│   └── client/
+│       ├── App.tsx                     # Root component
+│       ├── styles/
+│       │   ├── variables.css           # Design system (colors, spacing, typography)
+│       │   └── global.css              # Global styles
+│       │
+│       └── features/
+│           ├── jobs/
+│           │   ├── pages/JobsPage.tsx      # Job list + add form
+│           │   ├── components/
+│           │   │   ├── NewJobForm.tsx      # Add job form
+│           │   │   ├── JobList.tsx         # List of jobs
+│           │   │   └── onboarding/         # First-time user experience
+│           │   │       ├── WelcomePanel.tsx
+│           │   │       ├── CareerProfileCard.tsx
+│           │   │       └── *.css
+│           │   └── styles/
+│           │       └── jobs-page.css
+│           │
+│           └── workspace/
+│               ├── pages/WorkspacePage.tsx  # Main analysis view
+│               ├── components/
+│               │   ├── SourcePanel.tsx      # Job + metadata
+│               │   ├── ChatPanel.tsx        # Recruiter chat
+│               │   ├── StudioPanel.tsx      # Score, keywords, artifacts
+│               │   ├── ResumeScore/
+│               │   ├── MissingKeywords/
+│               │   ├── JobFitAnalysis/
+│               │   └── ArtifactComparison/
+│               └── styles/
+│                   └── workspace.css
+│
+├── data/
+│   ├── Master_Career_Document.md       # Recruiter's career profile (manual entry)
+│   └── jobops.db                       # SQLite database (generated)
+│
+├── docs/
+│   ├── ARCHITECTURE.md                 # This file
+│   ├── PRODUCT_DECISIONS.md            # Design decisions and tradeoffs
+│   ├── AI_CONTEXT.md                   # AI agent instructions
+│   ├── KNOWN_ISSUES.md                 # P0-P3 issues and status
+│   └── adr/                            # Architecture Decision Records
+│
+└── tests/
+    ├── unit/                           # Pure function tests
+    ├── integration/                    # API + database tests
+    └── components/                     # React component tests
+```
+
+**Key principles:**
+- Features group by domain (jobs, workspace), not by type
+- Components live with tests and styles (colocation)
+- Services are stateless, reusable
+- Types defined in shared layer for cross-boundary usage
+- Design system centralized in CSS variables
 
 ---
 
@@ -804,6 +962,105 @@ DATABASE_PATH=/var/lib/jobops/data.db
 
 ---
 
+---
+
+## Common Integration Patterns
+
+### Adding a New Analysis Service
+
+1. Create service in `src/server/services/YourNewService.ts`
+2. Export interface and implementation
+3. Add route in `src/server/routes/workspace.ts` to call it
+4. Add test file in `tests/integration/services/`
+5. Return typed response to client
+
+**Example:**
+```typescript
+// Service
+export interface YourAnalysisService {
+  analyze(careerModel: CareerModel, job: Job): Promise<YourAnalysisResult>;
+}
+
+// Route
+app.post('/api/workspace/:jobId/your-analysis', async (req, res) => {
+  const result = await yourService.analyze(careerModel, job);
+  res.json(result);
+});
+
+// Client
+const result = await fetch(`/api/workspace/${jobId}/your-analysis`);
+```
+
+### Adding a New UI Feature
+
+1. Create feature folder: `src/client/features/your-feature/`
+2. Structure: `pages/`, `components/`, `styles/`
+3. Add component tests (same folder)
+4. Import from services via hooks, not directly
+5. Use CSS variables for all visual properties
+
+**Pattern:**
+```typescript
+// Component calls hook
+function YourComponent() {
+  const data = useYourService();
+  return <div>{data}</div>;
+}
+
+// Hook calls service API
+function useYourService() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    fetch('/api/your-data').then(r => r.json()).then(setData);
+  }, []);
+  return data;
+}
+```
+
+### Working with Career Model
+
+**Never mutate directly:**
+```typescript
+// ❌ WRONG
+careerModel.sections.skills.push("New skill");
+
+// ✅ RIGHT
+const change = new ChangeNode({
+  target: "resume",
+  field: "skills",
+  operation: "add",
+  newValue: "New skill",
+  reason: "Critical skill for this role",
+});
+changeGraph.record(change);
+```
+
+### Caching Analysis Results
+
+Cache key includes Career Model hash:
+
+```typescript
+const cacheKey = `${jobId}:${careerModel.metadata.hash}:${analysisType}`;
+const cached = cache.get(cacheKey);
+if (cached) return cached;
+
+const result = await expensiveAnalysis(careerModel, job);
+cache.set(cacheKey, result);
+return result;
+```
+
+---
+
+## References
+
+- **[PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md):** Why major decisions were made
+- **[AI_CONTEXT.md](AI_CONTEXT.md):** Instructions for AI agents implementing features
+- **[KNOWN_ISSUES.md](KNOWN_ISSUES.md):** P0-P3 issues, deferred features, workarounds
+- **[docs/adr/](adr/):** Detailed analysis of specific decisions
+
+---
+
 **Document Version:** 1.0.0-rc1  
 **Last Updated:** 2026-06-13  
-**Maintainer:** Erik Taylor
+**Maintainer:** Erik Taylor  
+**Status:** Canonical reference—read this before implementing features or fixing bugs
