@@ -30,7 +30,7 @@ export default function HealthStatus({ health }: HealthStatusProps) {
 
       <div className={`status-item ${cvLoaded ? "ok" : "warning"}`}>
         <span className="indicator">●</span>
-        <span>{cvLoaded ? "Master CV" : "Master CV (missing)"}</span>
+        <span>{cvLoaded ? "Career Profile" : "Career Profile (missing)"}</span>
       </div>
 
       <div className={`status-item ${apiConfigured ? "ok" : "warning"}`}>

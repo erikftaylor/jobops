@@ -8,6 +8,13 @@
   overflow: hidden;
 }
 
+.jobs-page--welcome {
+  grid-template-columns: 1fr;
+  height: auto;
+  min-height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
 .sources-panel,
 .chat-panel,
 .studio-panel {

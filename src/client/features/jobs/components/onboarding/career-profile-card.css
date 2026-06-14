@@ -1,0 +1,160 @@
+.career-profile-card {
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+  background: var(--color-card-bg, #ffffff);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.career-profile-card .card-header {
+  padding: 16px;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.career-profile-card .card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.career-profile-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.career-profile-card .status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.career-profile-card .status-badge.loaded {
+  background: var(--color-success-light, #d1fae5);
+  color: var(--color-success-dark, #065f46);
+}
+
+.career-profile-card .status-badge.missing {
+  background: var(--color-warning-light, #fef3c7);
+  color: var(--color-warning-dark, #92400e);
+}
+
+.career-profile-card .status-badge.error {
+  background: var(--color-error-light, #fee2e2);
+  color: var(--color-error-dark, #991b1b);
+}
+
+.career-profile-card .card-content {
+  padding: 16px;
+}
+
+.career-profile-card .status-message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary, #666666);
+  line-height: 1.5;
+}
+
+.career-profile-card .status-message p {
+  margin: 8px 0;
+}
+
+.career-profile-card .status-message p:first-child {
+  margin-top: 0;
+}
+
+.career-profile-card .status-message code {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.career-profile-card .help-text {
+  font-size: 13px;
+  margin-top: 12px !important;
+  color: var(--color-text-tertiary, #999999);
+}
+
+.career-profile-card .profile-details {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.career-profile-card .detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+}
+
+.career-profile-card .detail-item:last-child {
+  border-bottom: none;
+}
+
+.career-profile-card .detail-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #666666);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.career-profile-card .detail-value {
+  font-size: 14px;
+  color: var(--color-text-primary, #1a1a1a);
+  font-weight: 500;
+}
+
+.career-profile-card .detail-value.mono {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.career-profile-card .profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light, #f0f0f0);
+}
+
+.career-profile-card .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.career-profile-card .stat-count {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary, #3b82f6);
+}
+
+.career-profile-card .stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #666666);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

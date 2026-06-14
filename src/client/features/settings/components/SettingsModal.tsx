@@ -99,7 +99,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             className={`tab ${activeTab === "career" ? "active" : ""}`}
             onClick={() => setActiveTab("career")}
           >
-            Career Document
+            Career Profile
           </button>
           <button
             className={`tab ${activeTab === "angles" ? "active" : ""}`}
@@ -242,7 +242,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="settings-section">
               <div className="career-doc-preview">
                 <div className="preview-header">
-                  <h3>Master Career Document</h3>
+                  <h3>Career Profile</h3>
                   <div className="preview-meta">
                     <span className="hash-label">Hash:</span>
                     <code className="hash-value">
