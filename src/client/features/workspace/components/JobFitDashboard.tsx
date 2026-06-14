@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import { useJobFit } from '../hooks';
 import { AnalyticsEvents } from '@client/lib/analytics';
 
@@ -43,7 +43,7 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
   );
 }
 
-export function JobFitDashboard({ jobId }: JobFitDashboardProps) {
+export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDashboardProps) {
   const { fit, isLoading, error } = useJobFit(jobId);
 
   useEffect(() => {
@@ -232,4 +232,4 @@ export function JobFitDashboard({ jobId }: JobFitDashboardProps) {
       </div>
     </div>
   );
-}
+});

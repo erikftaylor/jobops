@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useKeywordAnalysis } from '../hooks';
 import { useKeywordActions } from '../hooks/useKeywordActions';
 import { AnalyticsEvents } from '@client/lib/analytics';
@@ -9,7 +9,7 @@ interface MissingKeywordsProps {
 
 type FilterType = 'all' | 'critical' | 'missing';
 
-export function MissingKeywords({ jobId }: MissingKeywordsProps) {
+export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingKeywordsProps) {
   const { analysis, isLoading, error } = useKeywordAnalysis(jobId);
   const { proposeKeyword, acceptKeywordSuggestion, ignoreKeywordSuggestion, isProposing } = useKeywordActions(jobId);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -257,4 +257,4 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
       )}
     </div>
   );
-}
+});

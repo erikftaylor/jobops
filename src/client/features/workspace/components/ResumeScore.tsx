@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import { useWorkspaceScore } from '../hooks';
 import { AnalyticsEvents } from '@client/lib/analytics';
 
@@ -43,7 +43,7 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
   );
 }
 
-export function ResumeScore({ jobId }: ResumeScoreProps) {
+export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps) {
   const { score, isLoading, error, reload } = useWorkspaceScore(jobId);
 
   useEffect(() => {
@@ -159,4 +159,4 @@ export function ResumeScore({ jobId }: ResumeScoreProps) {
       </div>
     </div>
   );
-}
+});

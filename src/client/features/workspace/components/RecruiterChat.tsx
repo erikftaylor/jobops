@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useRecruiterChat } from '../hooks/useRecruiterChat';
 import { RECRUITER_QUESTIONS } from '@shared/types';
 import { AnalyticsEvents } from '@client/lib/analytics';
@@ -7,7 +7,7 @@ interface RecruiterChatProps {
   jobId?: string | undefined;
 }
 
-export function RecruiterChat({ jobId }: RecruiterChatProps) {
+export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterChatProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const { isLoading, error, askQuestion } = useRecruiterChat({ jobId });
@@ -169,4 +169,4 @@ export function RecruiterChat({ jobId }: RecruiterChatProps) {
       </div>
     </div>
   );
-}
+});

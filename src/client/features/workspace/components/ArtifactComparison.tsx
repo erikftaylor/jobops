@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface ArtifactVariant {
@@ -17,7 +17,7 @@ interface ArtifactComparisonProps {
 
 type ComparisonTab = 'original' | 'atsOptimized' | 'executiveSummary' | 'recruiterOptimized';
 
-export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
+export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
   const [activeTab, setActiveTab] = useState<ComparisonTab>('original');
   const [variants, setVariants] = useState<ArtifactVariant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -278,4 +278,4 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
       </div>
     </div>
   );
-}
+});

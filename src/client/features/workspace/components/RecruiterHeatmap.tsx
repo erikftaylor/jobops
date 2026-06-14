@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import { useHeatmap } from '../hooks';
 import { AnalyticsEvents } from '@client/lib/analytics';
 
@@ -6,7 +6,7 @@ interface RecruiterHeatmapProps {
   jobId: string | undefined;
 }
 
-export function RecruiterHeatmap({ jobId }: RecruiterHeatmapProps) {
+export const RecruiterHeatmap = memo(function RecruiterHeatmap({ jobId }: RecruiterHeatmapProps) {
   const { heatmap, isLoading, error } = useHeatmap(jobId);
 
   useEffect(() => {
@@ -163,4 +163,4 @@ export function RecruiterHeatmap({ jobId }: RecruiterHeatmapProps) {
       </div>
     </div>
   );
-}
+});
