@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Job } from "@shared/types";
 import ConversationPanel from "./ConversationPanel.js";
+import { GenerateButton, ResumePreviewModal, VersionBadge } from "../../artifacts/index.js";
+import { JobArtifact } from "../../artifacts/hooks/useArtifacts.js";
 import "../styles/studio-panel.css";
 
 type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "applied" | "closed";
@@ -73,6 +75,8 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [artifact, setArtifact] = useState<JobArtifact | null>(null);
+  const [showResumePreview, setShowResumePreview] = useState(false);
 
   if (!selectedJob) {
     return (
@@ -251,6 +255,41 @@ export default function StudioPanel({ selectedJob, isLoading, onStateChange, onA
           </button>
         </div>
       )}
+
+      {/* Artifact Generation Section */}
+      <div style={{ marginBottom: "20px", padding: "16px", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+        <h4 style={{ marginBottom: "12px" }}>Resume Generation</h4>
+        <GenerateButton jobId={selectedJob.id} onArtifactCreated={(a) => { setArtifact(a); setShowResumePreview(true); }} />
+
+        {artifact && (
+          <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "#f3f4f6", borderRadius: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <span>Resume Generated</span>
+              <VersionBadge version={artifact.version} />
+            </div>
+            <button
+              onClick={() => setShowResumePreview(true)}
+              style={{
+                padding: "8px 12px",
+                backgroundColor: "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Preview
+            </button>
+          </div>
+        )}
+      </div>
+
+      <ResumePreviewModal
+        isOpen={showResumePreview}
+        artifact={artifact}
+        jobId={selectedJob.id}
+        onClose={() => setShowResumePreview(false)}
+      />
 
       <div className="state-controls">
         {availableActions.length > 0 ? (
