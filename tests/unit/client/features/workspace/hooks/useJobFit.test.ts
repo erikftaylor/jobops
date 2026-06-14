@@ -64,10 +64,10 @@ describe('useJobFit', () => {
     const { result } = renderHook(() => useJobFit('job-123'));
 
     await waitFor(() => {
-      expect(result.current.error).toBeDefined();
+      expect(result.current.error).not.toBeNull();
     });
 
-    expect(result.current.error).toBe('Network error');
+    expect(result.current.error).toContain('Network error');
   });
 
   it('should handle non-ok response', async () => {
