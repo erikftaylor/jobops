@@ -116,11 +116,22 @@ class MockConversationService {
     const id = crypto.randomBytes(8).toString("hex");
     const now = new Date().toISOString();
 
+    // Verify change set exists
+    const selectStmt = this.db.prepare(`SELECT id FROM change_sets WHERE id = ?`);
+    const changeSet = selectStmt.get(changeSetId);
+    if (!changeSet) {
+      throw new Error(`Change set ${changeSetId} not found`);
+    }
+
     // Update change set status
     const updateStmt = this.db.prepare(
       `UPDATE change_sets SET status = ?, decided_at = ? WHERE id = ?`
     );
-    updateStmt.run("accepted", now, changeSetId);
+    const updateResult = updateStmt.run("accepted", now, changeSetId);
+
+    if (updateResult.changes === 0) {
+      throw new Error(`Failed to update change set ${changeSetId}`);
+    }
 
     // Record in accepted_changes audit trail
     const insertStmt = this.db.prepare(
@@ -348,6 +359,28 @@ describe("ConversationService", () => {
     expect(updatedChangeset).toBeDefined();
     expect(updatedChangeset.status).toBe("accepted");
     expect(updatedChangeset.decided_at).toBeDefined();
+  });
+
+  it("should throw error when accepting non-existent change set", () => {
+    const jobId = createTestJob();
+    const analysisId = createTestAnalysis(jobId);
+
+    const conversation = conversationService.startConversation({
+      jobId,
+      analysisId,
+    });
+
+    const fakeChangeSetId = "nonexistent-id";
+
+    // Attempt to accept non-existent change set
+    expect(() => {
+      conversationService.acceptChange(conversation.id, fakeChangeSetId, jobId);
+    }).toThrow(`Change set ${fakeChangeSetId} not found`);
+
+    // Verify no orphaned records were created
+    const stmt = db.prepare(`SELECT COUNT(*) as count FROM accepted_changes WHERE change_set_id = ?`);
+    const result = stmt.get(fakeChangeSetId) as any;
+    expect(result.count).toBe(0);
   });
 
   it("should reject change with note", () => {

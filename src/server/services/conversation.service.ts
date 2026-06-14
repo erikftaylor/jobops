@@ -212,11 +212,22 @@ export class ConversationService {
     const id = crypto.randomBytes(8).toString("hex");
     const now = new Date().toISOString();
 
+    // Verify change set exists
+    const selectStmt = db.prepare(`SELECT id FROM change_sets WHERE id = ?`);
+    const changeSet = selectStmt.get(changeSetId);
+    if (!changeSet) {
+      throw new Error(`Change set ${changeSetId} not found`);
+    }
+
     // Update change set status
     const updateStmt = db.prepare(
       `UPDATE change_sets SET status = ?, decided_at = ? WHERE id = ?`
     );
-    updateStmt.run("accepted", now, changeSetId);
+    const updateResult = updateStmt.run("accepted", now, changeSetId);
+
+    if (updateResult.changes === 0) {
+      throw new Error(`Failed to update change set ${changeSetId}`);
+    }
 
     // Record in accepted_changes audit trail
     const insertStmt = db.prepare(

@@ -16,6 +16,9 @@ export function useJobs() {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to load jobs");
       const data = await response.json();
+      if (!Array.isArray(data.jobs)) {
+        throw new Error("Invalid response: jobs must be an array");
+      }
       setJobs(data.jobs);
     } catch (err) {
       setError((err as Error).message);

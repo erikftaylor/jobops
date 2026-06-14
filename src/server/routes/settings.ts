@@ -91,12 +91,12 @@ router.patch("/", (req: Request, res: Response) => {
 // GET /api/career-document
 router.get("/career-document", (_req: Request, res: Response) => {
   try {
-    const parsed = careerDocService.getActiveCareerDocument();
+    let parsed = careerDocService.getActiveCareerDocument();
 
     if (!parsed) {
       // Return empty/placeholder state
       const rawContent = careerDocService.readCareerDocument();
-      const parsed = careerDocService.parseCareerDocument(rawContent);
+      parsed = careerDocService.parseCareerDocument(rawContent);
       return res.json({
         ...parsed,
         hash: careerDocService.computeHash(rawContent),
