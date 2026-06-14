@@ -21,38 +21,94 @@ import { eventBus, WorkspaceEvents } from '../services/event-bus.service.js';
 import type { CareerModel } from '../../shared/types.js';
 
 const router = Router();
-const scoreService = new ResumeScoreService();
-const keywordService = new KeywordAnalyzerService();
-const heatmapService = new HeatmapAnalyzerService();
-const fitService = new FitAnalyzerService();
-const recruiterChatService = new RecruiterChatService(getClaudeService());
-const jobService = createJobService();
-const careerDocService = createCareerDocService();
 
-// Initialize keyword proposal service and recalculation service
-const db = getDatabase().getConnection();
-const changeGraphService = createChangeGraphService(db);
-const keywordProposalService = createKeywordProposalService(db, changeGraphService);
-const careerModelService = createCareerModelService(db, changeGraphService);
-const recalculationService = createWorkspaceRecalculationService(db);
+// Lazy initialization: services are created after database is ready
+let services: {
+  scoreService: ResumeScoreService;
+  keywordService: KeywordAnalyzerService;
+  heatmapService: HeatmapAnalyzerService;
+  fitService: FitAnalyzerService;
+  recruiterChatService: RecruiterChatService;
+  jobService: ReturnType<typeof createJobService>;
+  careerDocService: ReturnType<typeof createCareerDocService>;
+  changeGraphService: ReturnType<typeof createChangeGraphService>;
+  keywordProposalService: ReturnType<typeof createKeywordProposalService>;
+  careerModelService: ReturnType<typeof createCareerModelService>;
+  recalculationService: ReturnType<typeof createWorkspaceRecalculationService>;
+  outputContractService: OutputContractService;
+  templateService: TemplateService;
+  artifactEngineService: ReturnType<typeof createArtifactEngineService>;
+  persistenceService: ReturnType<typeof createWorkspacePersistenceService>;
+} | null = null;
 
-// Initialize artifact generation service
-const outputContractService = new OutputContractService(db);
-const templateService = new TemplateService(db);
-const artifactEngineService = createArtifactEngineService(
-  db,
-  getOutputClaudeService(),
-  outputContractService,
-  templateService,
-  careerModelService
-);
-// Initialize persistence service
-const persistenceService = createWorkspacePersistenceService(db);
+/**
+ * Initialize workspace services after database is ready
+ * Called from server startup (index.ts)
+ */
+export function initializeWorkspaceServices() {
+  const scoreService = new ResumeScoreService();
+  const keywordService = new KeywordAnalyzerService();
+  const heatmapService = new HeatmapAnalyzerService();
+  const fitService = new FitAnalyzerService();
+  const recruiterChatService = new RecruiterChatService(getClaudeService());
+  const jobService = createJobService();
+  const careerDocService = createCareerDocService();
+
+  const db = getDatabase().getConnection();
+  const changeGraphService = createChangeGraphService(db);
+  const keywordProposalService = createKeywordProposalService(db, changeGraphService);
+  const careerModelService = createCareerModelService(db, changeGraphService);
+  const recalculationService = createWorkspaceRecalculationService(db);
+
+  const outputContractService = new OutputContractService(db);
+  const templateService = new TemplateService(db);
+  const artifactEngineService = createArtifactEngineService(
+    db,
+    getOutputClaudeService(),
+    outputContractService,
+    templateService,
+    careerModelService
+  );
+  const persistenceService = createWorkspacePersistenceService(db);
+
+  services = {
+    scoreService,
+    keywordService,
+    heatmapService,
+    fitService,
+    recruiterChatService,
+    jobService,
+    careerDocService,
+    changeGraphService,
+    keywordProposalService,
+    careerModelService,
+    recalculationService,
+    outputContractService,
+    templateService,
+    artifactEngineService,
+    persistenceService,
+  };
+
+  // Initialize event listeners after services are set up
+  initializeEventListeners();
+}
+
+/**
+ * Get initialized services (throws if not initialized)
+ */
+function getServices() {
+  if (!services) {
+    throw new Error('Workspace services not initialized. Call initializeWorkspaceServices first.');
+  }
+  return services;
+}
 
 /**
  * Initialize event listeners for workspace events
  */
 function initializeEventListeners() {
+  const svc = getServices();
+
   // Listen for change acceptance events (from keyword acceptance or recruiter chat)
   eventBus.subscribe(
     WorkspaceEvents.CHANGE_ACCEPTED,
@@ -66,7 +122,7 @@ function initializeEventListeners() {
         }
 
         // Fetch the job
-        const job = jobService.getJob(jobId);
+        const job = svc.jobService.getJob(jobId);
         if (!job) {
           console.error(`Job ${jobId} not found for recalculation`);
           return;
@@ -78,12 +134,12 @@ function initializeEventListeners() {
         }
 
         // Resolve the updated career model with all accepted changes
-        const careerModel = await careerModelService.resolveCareerModel({
+        const careerModel = await svc.careerModelService.resolveCareerModel({
           jobId,
         });
 
         // Recalculate all analyses
-        const results = await recalculationService.recalculateAll(job, careerModel);
+        const results = await svc.recalculationService.recalculateAll(job, careerModel);
 
         // Emit event with results for frontend to consume
         eventBus.emit('workspace:recalculated', {
@@ -109,9 +165,6 @@ function initializeEventListeners() {
     }
   );
 }
-
-// Initialize listeners when module loads
-initializeEventListeners();
 
 /**
  * Adapter to convert ParsedCareerDocument to simplified CareerModel for scoring services
@@ -150,8 +203,9 @@ function adaptToCareerModel(parsed: any): CareerModel {
 // GET /api/workspace/:jobId - Get workspace overview
 router.get('/:jobId', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -168,12 +222,12 @@ router.get('/:jobId', async (req: Request, res: Response) => {
     }
 
     // Get career document and adapt it
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
     // Calculate score
-    const score = scoreService.calculateScore(careerModel, job.description);
+    const score = svc.scoreService.calculateScore(careerModel, job.description);
 
     return res.json({
       jobId,
@@ -193,8 +247,9 @@ router.get('/:jobId', async (req: Request, res: Response) => {
 // GET /api/workspace/:jobId/score - Get resume score details
 router.get('/:jobId/score', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -210,11 +265,11 @@ router.get('/:jobId/score', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
-    const score = scoreService.calculateScore(careerModel, job.description);
+    const score = svc.scoreService.calculateScore(careerModel, job.description);
 
     return res.json(score);
   } catch (error) {
@@ -229,8 +284,9 @@ router.get('/:jobId/score', async (req: Request, res: Response) => {
 // GET /api/workspace/:jobId/keywords - Get keyword analysis
 router.get('/:jobId/keywords', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -246,8 +302,8 @@ router.get('/:jobId/keywords', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
     const resumeText = [
@@ -257,7 +313,7 @@ router.get('/:jobId/keywords', async (req: Request, res: Response) => {
       careerModel.sections.skills?.join(' '),
     ].filter(Boolean).join(' ');
 
-    const analysis = keywordService.analyze(job.description, resumeText);
+    const analysis = svc.keywordService.analyze(job.description, resumeText);
 
     return res.json(analysis);
   } catch (error) {
@@ -272,8 +328,9 @@ router.get('/:jobId/keywords', async (req: Request, res: Response) => {
 // GET /api/workspace/:jobId/heatmap - Get recruiter heatmap
 router.get('/:jobId/heatmap', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -282,11 +339,11 @@ router.get('/:jobId/heatmap', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
-    const heatmap = heatmapService.analyze(careerModel);
+    const heatmap = svc.heatmapService.analyze(careerModel);
 
     return res.json(heatmap);
   } catch (error) {
@@ -301,8 +358,9 @@ router.get('/:jobId/heatmap', async (req: Request, res: Response) => {
 // GET /api/workspace/:jobId/fit - Get job fit analysis
 router.get('/:jobId/fit', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -318,11 +376,11 @@ router.get('/:jobId/fit', async (req: Request, res: Response) => {
       });
     }
 
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
-    const analysis = fitService.analyze(careerModel, job.description);
+    const analysis = svc.fitService.analyze(careerModel, job.description);
 
     return res.json(analysis);
   } catch (error) {
@@ -337,6 +395,7 @@ router.get('/:jobId/fit', async (req: Request, res: Response) => {
 // POST /api/workspace/:jobId/chat - Answer recruiter questions
 router.post('/:jobId/chat', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
     const { questionId } = req.body;
 
@@ -350,7 +409,7 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
     }
 
     // Get job
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -366,16 +425,16 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
     }
 
     // Get career model
-    const careerDocContent = careerDocService.readCareerDocument();
-    const parsed = careerDocService.parseCareerDocument(careerDocContent);
+    const careerDocContent = svc.careerDocService.readCareerDocument();
+    const parsed = svc.careerDocService.parseCareerDocument(careerDocContent);
     const careerModel = adaptToCareerModel(parsed);
 
     // Calculate score and fit
-    const score = scoreService.calculateScore(careerModel, job.description);
-    const fit = fitService.analyze(careerModel, job.description);
+    const score = svc.scoreService.calculateScore(careerModel, job.description);
+    const fit = svc.fitService.analyze(careerModel, job.description);
 
     // Answer the question
-    const answer = await recruiterChatService.answerQuestion(
+    const answer = await svc.recruiterChatService.answerQuestion(
       questionId,
       careerModel,
       job.description,
@@ -391,7 +450,7 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
       'improve-first': 'What should I improve first?',
     };
 
-    persistenceService.saveChatAnswer(jobId, {
+    svc.persistenceService.saveChatAnswer(jobId, {
       questionId,
       question: questionMap[questionId] || questionId,
       answer,
@@ -410,6 +469,7 @@ router.post('/:jobId/chat', async (req: Request, res: Response) => {
 // POST /api/workspace/:jobId/keywords/propose - Propose a keyword for a job
 router.post('/:jobId/keywords/propose', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
     const { keyword, suggestedLanguage, target } = req.body;
 
@@ -429,7 +489,7 @@ router.post('/:jobId/keywords/propose', async (req: Request, res: Response) => {
     }
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -438,7 +498,7 @@ router.post('/:jobId/keywords/propose', async (req: Request, res: Response) => {
     }
 
     // Create proposal
-    const proposal = keywordProposalService.proposeKeyword(
+    const proposal = svc.keywordProposalService.proposeKeyword(
       jobId,
       keyword,
       suggestedLanguage,
@@ -458,10 +518,11 @@ router.post('/:jobId/keywords/propose', async (req: Request, res: Response) => {
 // POST /api/workspace/:jobId/keywords/:keywordId/accept - Accept a keyword proposal
 router.post('/:jobId/keywords/:keywordId/accept', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId, keywordId } = req.params;
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -470,7 +531,7 @@ router.post('/:jobId/keywords/:keywordId/accept', async (req: Request, res: Resp
     }
 
     // Get and verify proposal belongs to this job
-    const proposal = keywordProposalService.getProposalById(keywordId);
+    const proposal = svc.keywordProposalService.getProposalById(keywordId);
     if (!proposal) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -486,7 +547,7 @@ router.post('/:jobId/keywords/:keywordId/accept', async (req: Request, res: Resp
     }
 
     // Accept the proposal
-    const accepted = keywordProposalService.acceptProposal(keywordId);
+    const accepted = svc.keywordProposalService.acceptProposal(keywordId);
 
     // Emit event for recalculation
     eventBus.emit(WorkspaceEvents.CHANGE_ACCEPTED, {
@@ -509,10 +570,11 @@ router.post('/:jobId/keywords/:keywordId/accept', async (req: Request, res: Resp
 // POST /api/workspace/:jobId/keywords/:keywordId/ignore - Ignore a keyword proposal
 router.post('/:jobId/keywords/:keywordId/ignore', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId, keywordId } = req.params;
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -521,7 +583,7 @@ router.post('/:jobId/keywords/:keywordId/ignore', async (req: Request, res: Resp
     }
 
     // Get and verify proposal belongs to this job
-    const proposal = keywordProposalService.getProposalById(keywordId);
+    const proposal = svc.keywordProposalService.getProposalById(keywordId);
     if (!proposal) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -537,7 +599,7 @@ router.post('/:jobId/keywords/:keywordId/ignore', async (req: Request, res: Resp
     }
 
     // Ignore the proposal
-    const ignored = keywordProposalService.ignoreProposal(keywordId);
+    const ignored = svc.keywordProposalService.ignoreProposal(keywordId);
 
     return res.json(ignored);
   } catch (error) {
@@ -552,10 +614,11 @@ router.post('/:jobId/keywords/:keywordId/ignore', async (req: Request, res: Resp
 // GET /api/workspace/:jobId/persistence - Get persisted workspace state
 router.get('/:jobId/persistence', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: 'NOT_FOUND',
@@ -564,8 +627,8 @@ router.get('/:jobId/persistence', async (req: Request, res: Response) => {
     }
 
     // Get state and chat history
-    const state = persistenceService.getState(jobId);
-    const chatHistory = persistenceService.getChatHistory(jobId);
+    const state = svc.persistenceService.getState(jobId);
+    const chatHistory = svc.persistenceService.getChatHistory(jobId);
 
     return res.json({
       state: state || {
@@ -587,8 +650,9 @@ router.get('/:jobId/persistence', async (req: Request, res: Response) => {
 // GET /api/workspace/:jobId/artifacts - Generate artifact variants
 router.get('/:jobId/artifacts', async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -605,7 +669,7 @@ router.get('/:jobId/artifacts', async (req: Request, res: Response) => {
     }
 
     // Get career model
-    const careerModel = await careerModelService.resolveCareerModel({ jobId });
+    const careerModel = await svc.careerModelService.resolveCareerModel({ jobId });
     if (!careerModel) {
       return res.status(400).json({
         code: 'INVALID_CAREER_MODEL',
@@ -642,7 +706,7 @@ router.get('/:jobId/artifacts', async (req: Request, res: Response) => {
       variantConfigs.map(async (config) => {
         try {
           // Generate the artifact with the positioning profile
-          const artifact = await artifactEngineService.generateArtifact({
+          const artifact = await svc.artifactEngineService.generateArtifact({
             jobId,
             artifact_type: 'resume',
             variant: config.positioningProfile,
@@ -652,7 +716,7 @@ router.get('/:jobId/artifacts', async (req: Request, res: Response) => {
           });
 
           // Calculate score for this variant
-          const score = scoreService.calculateScore(careerModel, job.description);
+          const score = svc.scoreService.calculateScore(careerModel, job.description);
 
           // Extract preview text from artifact output
           const preview = extractArtifactPreview(artifact.output);

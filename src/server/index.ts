@@ -9,8 +9,8 @@ import jobsRouter from "./routes/jobs.js";
 import settingsRouter from "./routes/settings.js";
 import analysisRouter from "./routes/analysis.js";
 import conversationRouter from "./routes/conversation.js";
-import artifactsRouter from "./routes/artifacts.js";
-import workspaceRouter from "./routes/workspace.js";
+import artifactsRouter, { initializeArtifactServices } from "./routes/artifacts.js";
+import workspaceRouter, { initializeWorkspaceServices } from "./routes/workspace.js";
 
 fileURLToPath(import.meta.url); // Keep for potential future use
 
@@ -100,6 +100,16 @@ async function start() {
     const db = getDatabase();
     const dbHealth = db.health();
     console.log(`✅ Database connected (${dbHealth.size} bytes)`);
+
+    // Initialize artifact services (depends on database)
+    console.log("🎨 Initializing artifact services...");
+    initializeArtifactServices();
+    console.log("✅ Artifact services initialized");
+
+    // Initialize workspace services (depends on database)
+    console.log("💼 Initializing workspace services...");
+    initializeWorkspaceServices();
+    console.log("✅ Workspace services initialized");
 
     // Load and version Master Career Document
     console.log("📄 Loading Master Career Document...");

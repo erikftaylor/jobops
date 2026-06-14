@@ -11,22 +11,58 @@ import { createChangeGraphService } from "../services/change-graph.service.js";
 
 const router = Router();
 
-// Initialize services
-const db = getDatabase().getConnection();
-const claudeService = getClaudeService();
-const jobService = createJobService();
-const changeGraphService = createChangeGraphService(db);
-const careerModelService = createCareerModelService(db, changeGraphService);
-const outputContractService = createOutputContractService(db);
-const templateService = createTemplateService(db);
-const artifactEngineService = createArtifactEngineService(
-  db,
-  claudeService,
-  outputContractService,
-  templateService,
-  careerModelService
-);
-const cacheService = createArtifactCacheService(db);
+// Lazy initialization: services are created after database is ready
+let services: {
+  jobService: ReturnType<typeof createJobService>;
+  changeGraphService: ReturnType<typeof createChangeGraphService>;
+  careerModelService: ReturnType<typeof createCareerModelService>;
+  outputContractService: ReturnType<typeof createOutputContractService>;
+  templateService: ReturnType<typeof createTemplateService>;
+  artifactEngineService: ReturnType<typeof createArtifactEngineService>;
+  cacheService: ReturnType<typeof createArtifactCacheService>;
+} | null = null;
+
+/**
+ * Initialize artifact services after database is ready
+ * Called from server startup (index.ts)
+ */
+export function initializeArtifactServices() {
+  const db = getDatabase().getConnection();
+  const claudeService = getClaudeService();
+  const jobService = createJobService();
+  const changeGraphService = createChangeGraphService(db);
+  const careerModelService = createCareerModelService(db, changeGraphService);
+  const outputContractService = createOutputContractService(db);
+  const templateService = createTemplateService(db);
+  const artifactEngineService = createArtifactEngineService(
+    db,
+    claudeService,
+    outputContractService,
+    templateService,
+    careerModelService
+  );
+  const cacheService = createArtifactCacheService(db);
+
+  services = {
+    jobService,
+    changeGraphService,
+    careerModelService,
+    outputContractService,
+    templateService,
+    artifactEngineService,
+    cacheService,
+  };
+}
+
+/**
+ * Get initialized services (throws if not initialized)
+ */
+function getServices() {
+  if (!services) {
+    throw new Error("Artifact services not initialized. Call initializeArtifactServices first.");
+  }
+  return services;
+}
 
 /**
  * POST /api/artifacts/generate
@@ -34,6 +70,7 @@ const cacheService = createArtifactCacheService(db);
  */
 router.post("/generate", async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const {
       jobId,
       artifact_type,
@@ -75,7 +112,7 @@ router.post("/generate", async (req: Request, res: Response) => {
     }
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: "NOT_FOUND",
@@ -86,7 +123,7 @@ router.post("/generate", async (req: Request, res: Response) => {
     // Resolve career model
     let careerModel;
     try {
-      careerModel = await careerModelService.resolveCareerModel({
+      careerModel = await svc.careerModelService.resolveCareerModel({
         jobId,
         positioningId: undefined,
       });
@@ -107,7 +144,7 @@ router.post("/generate", async (req: Request, res: Response) => {
     // Generate artifact
     let artifact;
     try {
-      artifact = await artifactEngineService.generateArtifact({
+      artifact = await svc.artifactEngineService.generateArtifact({
         jobId,
         artifact_type: artifact_type as any,
         variant,
@@ -126,7 +163,7 @@ router.post("/generate", async (req: Request, res: Response) => {
 
     // Cache the result
     try {
-      cacheService.cache({
+      svc.cacheService.cache({
         jobId,
         content: artifact.output,
         artifact_type,
@@ -162,10 +199,11 @@ router.post("/generate", async (req: Request, res: Response) => {
  */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { id } = req.params;
 
     // Get artifact metadata
-    const artifact = artifactEngineService.getArtifact(id);
+    const artifact = svc.artifactEngineService.getArtifact(id);
     if (!artifact) {
       return res.status(404).json({
         code: "NOT_FOUND",
@@ -174,7 +212,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     // Get artifact output
-    const output = artifactEngineService.getArtifactOutput(id);
+    const output = svc.artifactEngineService.getArtifactOutput(id);
     if (!output) {
       return res.status(404).json({
         code: "NOT_FOUND",
@@ -205,10 +243,11 @@ router.get("/:id", async (req: Request, res: Response) => {
  */
 router.get("/job/:jobId", async (req: Request, res: Response) => {
   try {
+    const svc = getServices();
     const { jobId } = req.params;
 
     // Verify job exists
-    const job = jobService.getJob(jobId);
+    const job = svc.jobService.getJob(jobId);
     if (!job) {
       return res.status(404).json({
         code: "NOT_FOUND",
@@ -217,7 +256,7 @@ router.get("/job/:jobId", async (req: Request, res: Response) => {
     }
 
     // Get all artifacts for job
-    const artifacts = artifactEngineService.getJobArtifacts(jobId);
+    const artifacts = svc.artifactEngineService.getJobArtifacts(jobId);
 
     return res.json({
       job_id: jobId,
