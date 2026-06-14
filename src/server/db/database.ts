@@ -6,6 +6,7 @@ import { migrate005 } from "./migrations/005-conversation-tables.js";
 import { migrate006 } from "./migrations/006-artifact-tables.js";
 import { migrate007 } from "./migrations/007-keyword-proposals.js";
 import { migrate008 } from "./migrations/008-workspace-persistence.js";
+import { migrate009 } from "./migrations/009-job-artifacts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,6 +79,14 @@ class DatabaseService {
 
     try {
       migrate008(this.db);
+    } catch (err: any) {
+      if (!err.message.includes("already exists")) {
+        throw err;
+      }
+    }
+
+    try {
+      migrate009(this.db);
     } catch (err: any) {
       if (!err.message.includes("already exists")) {
         throw err;
