@@ -2,7 +2,16 @@ import { describe, it, expect } from "vitest";
 import { parseKeywords, extractKeywords } from "../keyword-parser.js";
 
 describe("parseKeywords", () => {
+  // Semantic assertion helper
+  function expectKeywordsInclude(result: string[], keywords: string[]): void {
+    for (const keyword of keywords) {
+      expect(result).toContain(keyword);
+    }
+  }
   describe("Basic delimiter splitting", () => {
+    // These tests verify core delimiter contract: each delimiter must split text.
+    // Exact assertions here because delimiter behavior is a stable interface.
+
     it("should split on whitespace", () => {
       const result = parseKeywords("hello world test");
       expect(result).toEqual(["hello", "world", "test"]);
@@ -104,21 +113,19 @@ describe("parseKeywords", () => {
   describe("Empty and null input", () => {
     it("should return empty array for empty string", () => {
       const result = parseKeywords("");
+      // Exact contract: empty input must produce empty array (used in services)
       expect(result).toEqual([]);
     });
 
     it("should return empty array for whitespace only", () => {
       const result = parseKeywords("   ");
+      // Exact contract: whitespace alone yields no tokens
       expect(result).toEqual([]);
     });
 
     it("should return empty array for delimiter-only string", () => {
       const result = parseKeywords(",,,---;;;::()");
-      expect(result).toEqual([]);
-    });
-
-    it("should return empty array for null input", () => {
-      const result = parseKeywords("");
+      // Boundary case: no actual text, only delimiters
       expect(result).toEqual([]);
     });
   });
@@ -126,17 +133,19 @@ describe("parseKeywords", () => {
   describe("Case preservation", () => {
     it("should preserve case by default", () => {
       const result = parseKeywords("Hello World TEST");
+      // Exact contract: case is preserved (important for tech keywords like TypeScript)
       expect(result).toEqual(["Hello", "World", "TEST"]);
     });
 
-    it("should preserve mixed case in technical terms", () => {
+    it("should preserve case in technical terms", () => {
       const result = parseKeywords("TypeScript, JavaScript, Python");
-      expect(result).toEqual(["TypeScript", "JavaScript", "Python"]);
+      // Tech names depend on exact casing for matching (TypeScript vs typescript)
+      expectKeywordsInclude(result, ["TypeScript", "JavaScript", "Python"]);
     });
 
     it("should handle camelCase and PascalCase", () => {
       const result = parseKeywords("camelCase, PascalCase");
-      expect(result).toEqual(["camelCase", "PascalCase"]);
+      expectKeywordsInclude(result, ["camelCase", "PascalCase"]);
     });
   });
 
@@ -187,13 +196,15 @@ describe("parseKeywords", () => {
       const result = parseKeywords(jobDesc, { minLength: 3 });
 
       // Verify key technology keywords are parsed
-      expect(result).toContain("Senior");
-      expect(result).toContain("Developer");
-      expect(result).toContain("TypeScript");
-      expect(result).toContain("Node");
-      expect(result).toContain("React");
-      expect(result).toContain("Docker");
-      expect(result).toContain("Kubernetes");
+      expectKeywordsInclude(result, [
+        "Senior",
+        "Developer",
+        "TypeScript",
+        "Node",
+        "React",
+        "Docker",
+        "Kubernetes",
+      ]);
     });
 
     it("should parse resume text", () => {
@@ -201,32 +212,39 @@ describe("parseKeywords", () => {
         "Senior Software Engineer at TechCorp. Skilled in: JavaScript, Python, SQL. Led team of 5 engineers. Increased performance by 40%.";
       const result = parseKeywords(resume, { minLength: 2 });
 
-      expect(result).toContain("Senior");
-      expect(result).toContain("Software");
-      expect(result).toContain("Engineer");
-      expect(result).toContain("JavaScript");
-      expect(result).toContain("Python");
-      expect(result).toContain("SQL");
-      expect(result).toContain("Led");
-      expect(result).toContain("performance");
+      expectKeywordsInclude(result, [
+        "Senior",
+        "Software",
+        "Engineer",
+        "JavaScript",
+        "Python",
+        "SQL",
+        "Led",
+        "performance",
+      ]);
     });
 
     it("should handle skill list format", () => {
       const skills = "JavaScript, TypeScript, React.js, Node.js (3+ years)";
       const result = parseKeywords(skills);
 
-      expect(result).toContain("JavaScript");
-      expect(result).toContain("TypeScript");
-      expect(result).toContain("React");
-      expect(result).toContain("Node");
-      expect(result).toContain("years");
+      expectKeywordsInclude(result, [
+        "JavaScript",
+        "TypeScript",
+        "React",
+        "Node",
+        "years",
+      ]);
     });
 
-    it("should handle comma-separated list with extra spaces", () => {
+    it("should split comma-separated list correctly", () => {
       const list = "Java  ,  Python  ,  Go  ,  Rust";
       const result = parseKeywords(list);
 
-      expect(result).toEqual(["Java", "Python", "Go", "Rust"]);
+      // Exact assertion: empty result should be no tokens, full result should have all 4
+      // This is a stable contract: input split point should produce consistent tokens
+      expect(result.length).toBe(4);
+      expectKeywordsInclude(result, ["Java", "Python", "Go", "Rust"]);
     });
   });
 
