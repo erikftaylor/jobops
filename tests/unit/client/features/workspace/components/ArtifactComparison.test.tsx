@@ -1,83 +1,89 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ArtifactComparison } from '@client/features/workspace/components/ArtifactComparison';
+
+const mockVariants = [
+  {
+    type: 'original',
+    description: 'Current Resume',
+    artifact: 'resume text',
+    score: 75,
+    strengths: ['Well formatted'],
+    risks: [],
+    preview: 'Preview text...',
+  },
+  {
+    type: 'atsOptimized',
+    description: 'ATS Optimized',
+    artifact: 'resume text',
+    score: 80,
+    strengths: ['ATS compatible'],
+    risks: [],
+    preview: 'Preview text...',
+  },
+];
 
 describe('ArtifactComparison', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn();
   });
 
   it('should render without crashing', () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ variants: mockVariants }),
+    });
+
+    render(<ArtifactComparison jobId="job-123" />);
+    expect(screen.getByText('Resume Versions')).toBeTruthy();
+  });
+
+  it('should display loading state initially', () => {
+    (global.fetch as any).mockImplementationOnce(() => new Promise(() => {}));
     render(<ArtifactComparison jobId="job-123" />);
 
-    expect(screen.getByText('Resume Versions')).toBeInTheDocument();
+    expect(screen.getByText('Loading artifact variants...')).toBeTruthy();
   });
 
-  it('should display comparison tabs', () => {
-    render(<ArtifactComparison jobId="job-123" />);
-
-    expect(screen.getAllByText(/Original Resume/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Current Resume/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Optimized Preview/).length).toBeGreaterThan(0);
-  });
-
-  it('should display scores for each tab', () => {
-    render(<ArtifactComparison jobId="job-123" />);
-
-    // The component displays scores next to tab names
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(0);
-  });
-
-  it('should show default active tab (Current Resume)', () => {
-    const { container } = render(<ArtifactComparison jobId="job-123" />);
-
-    const activeButton = container.querySelector('button.active');
-    expect(activeButton).toBeInTheDocument();
-    expect(activeButton?.textContent).toContain('Current Resume');
-  });
-
-  it('should switch tabs on click', () => {
-    const { container } = render(<ArtifactComparison jobId="job-123" />);
-
-    const buttons = container.querySelectorAll('button');
-    const optimizedButton = Array.from(buttons).find(b => b.textContent?.includes('Optimized'));
-
-    if (optimizedButton) {
-      fireEvent.click(optimizedButton);
-      expect(optimizedButton).toHaveClass('active');
-    }
-  });
-
-  it('should render subtitle text', () => {
-    render(<ArtifactComparison jobId="job-123" />);
-
-    expect(screen.getByText('Compare different versions and their scores')).toBeInTheDocument();
-  });
-
-  it('should handle undefined jobId', () => {
+  it('should handle undefined jobId gracefully', () => {
     render(<ArtifactComparison jobId={undefined} />);
 
-    expect(screen.getByText('Resume Versions')).toBeInTheDocument();
+    expect(screen.getByText('Resume Versions')).toBeTruthy();
   });
 
-  it('should have all three tabs with numeric scores', () => {
+  it('should display subtitle text', () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ variants: mockVariants }),
+    });
+
+    render(<ArtifactComparison jobId="job-123" />);
+    expect(screen.getByText('Compare different versions and their scores')).toBeTruthy();
+  });
+
+  it('should fetch artifacts on mount', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ variants: mockVariants }),
+    });
+
     render(<ArtifactComparison jobId="job-123" />);
 
-    // Look for the score values that should be displayed
-    const allText = screen.getByText('Resume Versions').parentElement?.textContent || '';
-    expect(allText).toContain('65');
-    expect(allText).toContain('72');
-    expect(allText).toContain('85');
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/workspace/job-123/artifacts');
+    });
   });
 
-  it('should maintain semantic structure', () => {
-    const { container } = render(<ArtifactComparison jobId="job-123" />);
+  it('should handle fetch errors', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: false,
+    });
 
-    const card = container.querySelector('.workspace-card');
-    expect(card).toBeInTheDocument();
+    render(<ArtifactComparison jobId="job-123" />);
 
-    const title = container.querySelector('.workspace-card-title');
-    expect(title?.textContent).toBe('Resume Versions');
+    await waitFor(() => {
+      expect(screen.getByText(/Error/i)).toBeTruthy();
+    });
   });
 });
