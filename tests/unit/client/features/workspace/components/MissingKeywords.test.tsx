@@ -188,9 +188,9 @@ describe('MissingKeywords', () => {
 
     render(<MissingKeywords jobId="job-123" />);
 
-    expect(screen.getByText('Review')).toBeInTheDocument();
-    expect(screen.getByText('Add to Resume')).toBeInTheDocument();
-    expect(screen.getByText('Ignore')).toBeInTheDocument();
+    expect(screen.getByText('See Suggestion')).toBeInTheDocument();
+    expect(screen.getByText('Add This Keyword')).toBeInTheDocument();
+    expect(screen.getByText('Not Relevant')).toBeInTheDocument();
   });
 
   it('should show empty state when no keywords', () => {
@@ -235,14 +235,16 @@ describe('MissingKeywords', () => {
       error: null,
     });
 
-    const { rerender } = render(<MissingKeywords jobId="job-123" />);
+    render(<MissingKeywords jobId="job-123" />);
 
-    const reviewButton = screen.getByText('Review');
-    fireEvent.click(reviewButton);
+    // Initially "See Suggestion" button exists
+    const seeSuggestionButton = screen.getByText('See Suggestion');
+    expect(seeSuggestionButton).toBeInTheDocument();
 
-    // After clicking, button should change to "Hide"
-    const hideButton = screen.queryByText('Hide');
-    expect(hideButton).toBeTruthy();
+    fireEvent.click(seeSuggestionButton);
+
+    // After clicking, the detail content should be visible
+    expect(screen.getByText('Suggested placement:')).toBeInTheDocument();
   });
 
   it('should handle undefined jobId', () => {
