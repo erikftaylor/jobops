@@ -142,7 +142,7 @@ export class ArtifactEngineService {
       variant: input.variant,
       output,
       generated_at: now,
-      career_doc_version_hash: careerModel.hash,
+      career_doc_version_hash: careerModel.hash || careerModel.metadata.hash,
       content_hash: contentHash,
     };
   }

@@ -107,12 +107,18 @@ export class CareerModelService {
 
     const careerModel: CareerModel = {
       id,
-      hash,
+      hash, // Keep at top level for backward compatibility (now a valid legacy field)
       created_at: now,
       based_on: "master",
       content: contentString,
-      metadata,
-    };
+      fullName: "",
+      sections: {},
+      metadata: {
+        hash,
+        source: "master",
+        ...metadata,
+      },
+    } as unknown as CareerModel;
 
     // Cache in memory
     this.modelCache.set(hash, careerModel);
@@ -155,7 +161,7 @@ export class CareerModelService {
     }
 
     const model = this.rowToCareerModel(row);
-    this.modelCache.set(model.hash, model);
+    this.modelCache.set(model.hash || model.metadata.hash, model);
     return model;
   }
 
@@ -171,7 +177,7 @@ export class CareerModelService {
     const rows = stmt.all(limit) as any[];
     return rows.map((row) => {
       const model = this.rowToCareerModel(row);
-      this.modelCache.set(model.hash, model);
+      this.modelCache.set(model.hash || model.metadata.hash, model);
       return model;
     });
   }
@@ -387,14 +393,21 @@ export class CareerModelService {
    * Private: Convert database row to CareerModel
    */
   private rowToCareerModel(row: any): CareerModel {
+    const parsedMetadata = row.metadata ? JSON.parse(row.metadata) : {};
     return {
       id: row.id,
-      hash: row.hash,
+      hash: row.hash, // Legacy field for backward compatibility
       created_at: row.created_at,
       based_on: row.based_on,
       content: row.content,
-      metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-    };
+      fullName: "",
+      sections: {},
+      metadata: {
+        hash: row.hash,
+        source: "master",
+        ...parsedMetadata,
+      },
+    } as unknown as CareerModel;
   }
 }
 

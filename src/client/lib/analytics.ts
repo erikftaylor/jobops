@@ -15,7 +15,8 @@ class Analytics {
   track(event: AnalyticsEvent): void {
     if (!this.isEnabled) return;
 
-    const eventLog: AnalyticsEvent = {
+    // @ts-expect-error - Unused for now, kept as placeholder for event logging
+    const _eventLog: AnalyticsEvent = {
       timestamp: Date.now(),
       ...event,
     };

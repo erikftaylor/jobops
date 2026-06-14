@@ -147,7 +147,7 @@ export default function PreviewRenderer({
         {/* Footer */}
         <footer className="preview-footer">
           <div className="preview-footer-hash">
-            <strong>Hash:</strong> {careerModel.hash.substring(0, 12)}...
+            <strong>Hash:</strong> {(careerModel.hash || careerModel.metadata.hash).substring(0, 12)}...
           </div>
           {changeCount > 0 && (
             <div className="preview-footer-change-count">

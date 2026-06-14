@@ -69,7 +69,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
         <p className="workspace-card-subtitle">
           Compare different versions and their scores
         </p>
-        <div className="skeleton-artifacts">
+        <div className="skeleton-artifacts" role="status" aria-live="polite" aria-label="Resume versions are loading">
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="skeleton" style={{ flex: 1, height: '40px', borderRadius: '6px' }} />
@@ -89,7 +89,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
         <p className="workspace-card-subtitle">
           Compare different versions and their scores
         </p>
-        <div className="workspace-error">
+        <div className="workspace-error" role="alert" aria-live="assertive">
           <div className="workspace-error-message">
             <strong>Couldn't generate resume versions</strong>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
@@ -101,7 +101,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
             </p>
           </div>
           <div className="workspace-error-recovery">
-            <button className="workspace-error-retry" onClick={() => window.location.reload()}>
+            <button className="workspace-error-retry" onClick={() => window.location.reload()} aria-label="Retry resume version generation">
               Retry
             </button>
           </div>
@@ -118,12 +118,16 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
       </p>
 
       <div className="artifact-comparison-container">
-        <div className="comparison-tabs">
+        <div className="comparison-tabs" role="tablist" aria-label="Resume version comparison">
           {variants.map((variant) => (
             <button
               key={variant.type}
+              role="tab"
+              aria-selected={activeTab === variant.type}
+              aria-controls={`comparison-panel-${variant.type}`}
               className={`comparison-tab ${activeTab === variant.type ? 'active' : ''}`}
               onClick={() => handleTabChange(variant.type as ComparisonTab)}
+              aria-label={`${variant.description} version with score ${variant.score}`}
             >
               <span>{variant.description}</span>
               <span
@@ -132,6 +136,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
                   fontSize: '12px',
                   opacity: 0.7,
                 }}
+                aria-hidden="true"
               >
                 {variant.score}
               </span>
@@ -141,7 +146,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
 
         {currentVariant && (
           <>
-            <div className="comparison-content">
+            <div className="comparison-content" role="tabpanel" id={`comparison-panel-${activeTab}`}>
               <div style={{ width: '100%', textAlign: 'center', color: '#999' }}>
                 <p style={{ marginBottom: '8px' }}>{currentVariant.description}</p>
                 <p style={{ fontSize: '12px', color: '#ccc' }}>
@@ -203,7 +208,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
               </h4>
               <ul style={{ fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
                 {currentVariant.strengths.map((strength, i) => (
-                  <li key={i}>✓ {strength}</li>
+                  <li key={i}><span aria-hidden="true">✓ </span>{strength}</li>
                 ))}
               </ul>
 
@@ -222,7 +227,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
                   </h4>
                   <ul style={{ fontSize: '12px', color: '#d32f2f', lineHeight: '1.6' }}>
                     {currentVariant.risks.map((risk, i) => (
-                      <li key={i}>⚠ {risk}</li>
+                      <li key={i}><span aria-hidden="true">⚠ </span>{risk}</li>
                     ))}
                   </ul>
                 </>
@@ -270,6 +275,7 @@ export const ArtifactComparison = memo(function ArtifactComparison({ jobId }: Ar
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = '#2563eb')}
               onMouseLeave={(e) => (e.currentTarget.style.background = '#3b82f6')}
+              aria-label={`Use the ${currentVariant.description} version`}
             >
               Use This Version
             </button>

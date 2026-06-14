@@ -172,7 +172,7 @@ ${roles[artifact_type] || roles.resume}`;
    */
   private static careerModelSection(model: CareerModel): string {
     try {
-      const content = JSON.parse(model.content);
+      const content = model.content ? JSON.parse(model.content) : {};
       return `# Candidate Career Profile
 
 The following is the candidate's career information based on their master career document:
@@ -186,8 +186,8 @@ ${JSON.stringify(model.metadata || {}, null, 2)}`;
     } catch (err) {
       return `# Candidate Career Profile
 
-Career model hash: ${model.hash}
-Created: ${model.created_at}`;
+Career model hash: ${model.hash || model.metadata?.hash || "unknown"}
+Created: ${model.created_at || "unknown"}`;
     }
   }
 

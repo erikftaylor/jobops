@@ -149,7 +149,7 @@ describe('WorkspaceLayout', () => {
   it('should display location when present', () => {
     render(<WorkspaceLayout jobId="job-123" job={mockJob} />);
 
-    expect(screen.getByText('📍 San Francisco, CA')).toBeInTheDocument();
+    expect(screen.getByText('San Francisco, CA')).toBeInTheDocument();
   });
 
   it('should display salary range when available', () => {
@@ -161,7 +161,7 @@ describe('WorkspaceLayout', () => {
   it('should display job type when available', () => {
     render(<WorkspaceLayout jobId="job-123" job={mockJob} />);
 
-    expect(screen.getByText('📋 FULL TIME')).toBeInTheDocument();
+    expect(screen.getByText('FULL TIME')).toBeInTheDocument();
   });
 
   it('should handle missing location', () => {
@@ -169,7 +169,7 @@ describe('WorkspaceLayout', () => {
 
     render(<WorkspaceLayout jobId="job-123" job={jobWithoutLocation} />);
 
-    expect(screen.getByText('📍 Location not specified')).toBeInTheDocument();
+    expect(screen.getByText('Location not specified')).toBeInTheDocument();
   });
 
   it('should have responsive container structure', () => {
@@ -202,7 +202,7 @@ describe('WorkspaceLayout', () => {
       />
     );
 
-    const backButton = container.querySelector('[aria-label="Back to jobs"]');
+    const backButton = container.querySelector('[aria-label="Back to jobs list"]');
     expect(backButton).toBeInTheDocument();
   });
 });

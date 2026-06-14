@@ -39,7 +39,7 @@ describe('MissingKeywords', () => {
     expect(screen.getByText('Missing Keywords')).toBeInTheDocument();
     expect(screen.getByText("Couldn't analyze keywords")).toBeInTheDocument();
     expect(screen.getByText('Check your internet connection and try again.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 
   it('should render keyword list with critical filter', () => {

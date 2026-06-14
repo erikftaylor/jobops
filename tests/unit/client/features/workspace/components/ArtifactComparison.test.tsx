@@ -85,7 +85,7 @@ describe('ArtifactComparison', () => {
 
     await waitFor(() => {
       expect(screen.getByText("Couldn't generate resume versions")).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
+      expect(screen.getByRole('button', { name: /retry/i })).toBeTruthy();
     });
   });
 });

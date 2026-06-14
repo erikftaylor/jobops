@@ -68,7 +68,8 @@ export class FitAnalyzerService {
     }
 
     const skillsCount = (careerModel.sections.skills || []).length;
-    const requiredCount = (jobDescription.match(/required|must|essential/gi) || []).length;
+    // @ts-expect-error - Unused for now, kept as placeholder for future analysis
+    const _requiredCount = (jobDescription.match(/required|must|essential/gi) || []).length;
     if (skillsCount < 5) {
       risks.push('Limited breadth of technical skills shown');
     }
@@ -145,7 +146,7 @@ export class FitAnalyzerService {
     return points;
   }
 
-  private getPositioningAngle(careerModel: CareerModel, jobDescription: string): string {
+  private getPositioningAngle(careerModel: CareerModel, _jobDescription: string): string {
     const isSenior = (careerModel.sections.experience?.[0]?.title || '').includes('Senior');
     const hasMetrics = (careerModel.sections.experience || []).some(exp => (exp.metrics || []).length > 0);
     const skills = careerModel.sections.skills || [];

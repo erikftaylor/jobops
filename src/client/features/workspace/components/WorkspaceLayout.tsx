@@ -16,14 +16,18 @@ interface WorkspaceLayoutProps {
 export function WorkspaceLayout({ jobId, job, onBackClick }: WorkspaceLayoutProps) {
   return (
     <div className="workspace-container">
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <div className="workspace-header">
+      <header className="workspace-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
           {onBackClick && (
             <button
               className="workspace-back-btn"
               onClick={onBackClick}
-              aria-label="Back to jobs"
+              aria-label="Back to jobs list"
             >
               ← Back
             </button>
@@ -37,37 +41,41 @@ export function WorkspaceLayout({ jobId, job, onBackClick }: WorkspaceLayoutProp
         <div className="workspace-header-meta">
           {job && (
             <>
-              <span>📍 {job.location || 'Location not specified'}</span>
+              <div>
+                <span className="sr-only">Location:</span> {job.location || 'Location not specified'}
+              </div>
               {job.salary_min && job.salary_max && (
-                <span>
-                  💰 {job.salary_min.toLocaleString()}-{job.salary_max.toLocaleString()} {job.currency}
-                </span>
+                <div>
+                  <span className="sr-only">Salary:</span> {job.salary_min.toLocaleString()}-{job.salary_max.toLocaleString()} {job.currency}
+                </div>
               )}
               {job.job_type && (
-                <span>📋 {job.job_type.replace('_', ' ').replace('-', ' ').toUpperCase()}</span>
+                <div>
+                  <span className="sr-only">Job Type:</span> {job.job_type.replace('_', ' ').replace('-', ' ').toUpperCase()}
+                </div>
               )}
             </>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Two-Column Layout */}
-      <div className="workspace-layout">
+      {/* Main Content */}
+      <main id="main-content" className="workspace-layout">
         {/* Left Column (60%) */}
-        <div className="workspace-left-column">
+        <section className="workspace-left-column" aria-label="Resume analysis section">
           <ResumeScore jobId={jobId} />
           <MissingKeywords jobId={jobId} />
           <RecruiterHeatmap jobId={jobId} />
           <JobFitDashboard jobId={jobId} />
-        </div>
+        </section>
 
         {/* Right Column (40%) */}
-        <div className="workspace-right-column">
+        <section className="workspace-right-column" aria-label="Resume preview and chat section">
           <ResumePreview jobId={jobId} />
           <RecruiterChat jobId={jobId} />
           <ArtifactComparison jobId={jobId} />
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

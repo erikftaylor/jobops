@@ -47,7 +47,7 @@ describe('ResumeScore', () => {
     expect(screen.getByText('Resume Score')).toBeInTheDocument();
     expect(screen.getByText("Couldn't calculate score")).toBeInTheDocument();
     expect(screen.getByText('Check your internet connection and try again.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 
   it('should render with mock score data', () => {

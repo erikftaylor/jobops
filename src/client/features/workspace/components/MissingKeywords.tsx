@@ -28,7 +28,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Missing Keywords</h3>
-        <div className="skeleton-keywords">
+        <div className="skeleton-keywords" role="status" aria-live="polite" aria-label="Missing keywords are loading">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="skeleton-keyword-card">
               <div className="skeleton-keyword-name skeleton" style={{ width: '60%', height: '16px', marginBottom: '12px' }} />
@@ -48,7 +48,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Missing Keywords</h3>
-        <div className="workspace-error">
+        <div className="workspace-error" role="alert" aria-live="assertive">
           <div className="workspace-error-message">
             <strong>Couldn't analyze keywords</strong>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
@@ -63,6 +63,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
             <button
               className="workspace-error-retry"
               onClick={() => window.location.reload()}
+              aria-label="Retry keyword analysis"
             >
               Retry
             </button>
@@ -77,7 +78,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
       <div className="workspace-card">
         <h3 className="workspace-card-title">Missing Keywords</h3>
         <div className="keywords-empty">
-          <div className="keywords-empty-icon">✓</div>
+          <div className="keywords-empty-icon" aria-hidden="true">✓</div>
           <p>Great! Your resume covers the essential keywords.</p>
         </div>
       </div>
@@ -167,20 +168,29 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
         </div>
       </div>
 
-      <div className="keywords-filter-tabs">
+      <div className="keywords-filter-tabs" role="tablist" aria-label="Filter keywords by importance or status">
         <button
+          role="tab"
+          aria-selected={filter === 'all'}
+          aria-controls="keywords-all-panel"
           className={`keywords-filter-tab ${filter === 'all' ? 'active' : ''}`}
           onClick={() => setFilter('all')}
         >
           All ({analysis.missingKeywords.length})
         </button>
         <button
+          role="tab"
+          aria-selected={filter === 'critical'}
+          aria-controls="keywords-critical-panel"
           className={`keywords-filter-tab ${filter === 'critical' ? 'active' : ''}`}
           onClick={() => setFilter('critical')}
         >
           Critical ({analysis.missingKeywords.filter(k => k.importance === 'critical').length})
         </button>
         <button
+          role="tab"
+          aria-selected={filter === 'missing'}
+          aria-controls="keywords-missing-panel"
           className={`keywords-filter-tab ${filter === 'missing' ? 'active' : ''}`}
           onClick={() => setFilter('missing')}
         >
@@ -193,7 +203,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
           <p>No keywords in this filter.</p>
         </div>
       ) : (
-        <div className="keywords-list">
+        <div className="keywords-list" role="tabpanel" id={`keywords-${filter}-panel`} aria-labelledby={`keywords-${filter}-tab`}>
           {filteredKeywords.map((keyword) => {
             const isExpanded = expandedKeywords.has(keyword.keyword);
             return (
@@ -201,10 +211,10 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
                 <div className="keyword-header">
                   <div className="keyword-name">{keyword.keyword}</div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span className={`keyword-badge ${keyword.importance}`}>
+                    <span className={`keyword-badge ${keyword.importance}`} aria-label={`Importance level: ${keyword.importance}`}>
                       {keyword.importance.charAt(0).toUpperCase() + keyword.importance.slice(1)}
                     </span>
-                    <span className="keyword-status">
+                    <span className="keyword-status" aria-label={`Status: ${keyword.status === 'missing' ? 'Missing' : 'Weak'}`}>
                       {keyword.status === 'missing' ? 'Missing' : 'Weak'}
                     </span>
                   </div>
@@ -231,6 +241,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
                       className="keyword-action-btn"
                       onClick={() => toggleExpanded(keyword.keyword)}
                       disabled={isProposing || actioningKeyword === keyword.keyword}
+                      aria-label={`See suggestion for ${keyword.keyword}`}
                     >
                       See Suggestion
                     </button>
@@ -239,6 +250,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
                     className="keyword-action-btn primary"
                     onClick={() => handleAddKeyword(keyword.keyword, keyword.suggestedLanguage)}
                     disabled={isProposing || actioningKeyword === keyword.keyword}
+                    aria-label={`Add ${keyword.keyword} to resume`}
                   >
                     {actioningKeyword === keyword.keyword ? 'Adding...' : 'Add This Keyword'}
                   </button>
@@ -246,6 +258,7 @@ export const MissingKeywords = memo(function MissingKeywords({ jobId }: MissingK
                     className="keyword-action-btn"
                     onClick={() => handleIgnoreKeyword(keyword.keyword)}
                     disabled={isProposing || actioningKeyword === keyword.keyword}
+                    aria-label={`Mark ${keyword.keyword} as not relevant`}
                   >
                     {actioningKeyword === keyword.keyword ? 'Dismissing...' : 'Not Relevant'}
                   </button>

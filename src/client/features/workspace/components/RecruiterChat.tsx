@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { useRecruiterChat } from '../hooks/useRecruiterChat';
 import { RECRUITER_QUESTIONS } from '@shared/types';
 import { AnalyticsEvents } from '@client/lib/analytics';
@@ -53,30 +53,34 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
       </p>
 
       <div className="recruiter-chat-container">
-        <div className="chat-prompts">
+        <div className="chat-prompts" role="tablist" aria-label="Recruiter questions">
           {RECRUITER_QUESTIONS.map((question) => (
             <button
               key={question.id}
+              role="tab"
+              aria-selected={selectedQuestionId === question.id}
+              aria-controls={`chat-response-${question.id}`}
               className={`chat-prompt-btn ${
                 selectedQuestionId === question.id ? 'active' : ''
               }`}
               onClick={() => handleQuestionClick(question.id)}
               disabled={isCurrentlyLoading || false}
               title={question.description}
+              aria-label={question.question}
             >
               {question.question}
             </button>
           ))}
         </div>
 
-        <div className="chat-response">
+        <div className="chat-response" role="tabpanel" id={`chat-response-${selectedQuestionId || 'empty'}`}>
           {!selectedQuestionId ? (
             <div className="chat-response-empty">
-              <p style={{ margin: '20px 0' }}>👈 Select a question to see AI insights</p>
+              <p style={{ margin: '20px 0' }}>Select a question above to see AI insights</p>
               <p style={{ fontSize: '12px', color: '#999', marginTop: '12px' }}>Questions update as you modify your resume</p>
             </div>
           ) : isCurrentlyLoading ? (
-            <div className="chat-response-loading">
+            <div className="chat-response-loading" role="status" aria-live="polite" aria-label="Loading AI insights">
               <div className="skeleton" style={{ height: '20px', marginBottom: '12px', width: '80%' }} />
               <div className="skeleton" style={{ height: '16px', marginBottom: '8px', width: '100%' }} />
               <div className="skeleton" style={{ height: '16px', marginBottom: '8px', width: '95%' }} />
@@ -85,7 +89,7 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
               <div className="skeleton" style={{ height: '16px', width: '85%' }} />
             </div>
           ) : error ? (
-            <div className="chat-response-error">
+            <div className="chat-response-error" role="alert" aria-live="assertive">
               <strong>Couldn't get AI insights</strong>
               <p style={{ fontSize: '12px', marginTop: '8px' }}>
                 {error.includes('Claude')
@@ -98,6 +102,7 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
                 className="workspace-error-retry"
                 style={{ marginTop: '12px' }}
                 onClick={() => handleQuestionClick(selectedQuestionId!)}
+                aria-label="Retry AI insights for this question"
               >
                 Retry
               </button>
@@ -115,15 +120,16 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
                     background: currentAnswer.confidence >= 0.85 ? '#d1fae5' : '#fef3c7',
                     color: currentAnswer.confidence >= 0.85 ? '#065f46' : '#92400e',
                     borderRadius: '4px'
-                  }}>
-                    {currentAnswer.confidence >= 0.9 ? '✓ High' : currentAnswer.confidence >= 0.7 ? '◐ Medium' : '⚠️ Lower'} Confidence ({Math.round(currentAnswer.confidence * 100)}%)
+                  }} aria-label={`Confidence level: ${currentAnswer.confidence >= 0.9 ? 'high' : currentAnswer.confidence >= 0.7 ? 'medium' : 'lower'}`}>
+                    <span aria-hidden="true">{currentAnswer.confidence >= 0.9 ? '✓ ' : currentAnswer.confidence >= 0.7 ? '◐ ' : '⚠️ '}</span>
+                    {currentAnswer.confidence >= 0.9 ? 'High' : currentAnswer.confidence >= 0.7 ? 'Medium' : 'Lower'} Confidence ({Math.round(currentAnswer.confidence * 100)}%)
                   </span>
                 </div>
               </div>
 
               {currentAnswer.risks && currentAnswer.risks.length > 0 && (
                 <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f0f0f0' }}>
-                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#d32f2f' }}>⚠️ Concerns</h5>
+                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#d32f2f' }}><span aria-hidden="true">⚠️ </span>Concerns</h5>
                   <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '14px', lineHeight: '1.5' }}>
                     {currentAnswer.risks.map((risk: string, idx: number) => (
                       <li key={idx} style={{ marginBottom: '6px' }}>{risk}</li>
@@ -134,7 +140,7 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
 
               {currentAnswer.suggestedChanges && currentAnswer.suggestedChanges.length > 0 && (
                 <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f0f0f0' }}>
-                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#1976d2' }}>💡 Suggested Changes</h5>
+                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#1976d2' }}><span aria-hidden="true">💡 </span>Suggested Changes</h5>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {currentAnswer.suggestedChanges.map((change: any, idx: number) => (
                       <div key={idx} style={{ padding: '10px', background: '#f5f5f5', borderRadius: '6px', fontSize: '13px' }}>
@@ -151,7 +157,7 @@ export const RecruiterChat = memo(function RecruiterChat({ jobId }: RecruiterCha
 
               {currentAnswer.followUpQuestions && currentAnswer.followUpQuestions.length > 0 && (
                 <div>
-                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#1a1a1a' }}>❓ Follow-up Questions</h5>
+                  <h5 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: '#1a1a1a' }}><span aria-hidden="true">❓ </span>Follow-up Questions</h5>
                   <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '14px', lineHeight: '1.5' }}>
                     {currentAnswer.followUpQuestions.map((q: string, idx: number) => (
                       <li key={idx} style={{ marginBottom: '6px' }}>{q}</li>

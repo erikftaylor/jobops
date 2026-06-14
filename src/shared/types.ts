@@ -255,6 +255,11 @@ export interface CareerModel {
   };
   // Legacy fields for backward compatibility
   id?: string;
+  // TODO: Remove hash field after migrating all callers to use metadata.hash
+  // Currently, hash is duplicated in both top-level and metadata.hash for backward compatibility.
+  // Once all production code (PreviewRenderer, ArtifactComparison, PromptComposer) migrates to
+  // metadata.hash exclusively, this field can be removed.
+  hash?: string;
   created_at?: string;
   based_on?: string;
   content?: string;

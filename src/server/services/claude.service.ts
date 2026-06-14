@@ -127,7 +127,7 @@ export class ClaudeService {
 
   async generateWithSchema<T>(
     prompt: string,
-    schema: Record<string, any>
+    _schema: Record<string, any>
   ): Promise<T> {
     if (!this.client) {
       throw new Error(

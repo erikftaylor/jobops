@@ -38,7 +38,7 @@ describe('JobFitDashboard', () => {
 
     expect(screen.getByText('Job Fit Analysis')).toBeInTheDocument();
     expect(screen.getByText("Couldn't analyze job fit")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 
   it('should render fit percentage and talking points', () => {

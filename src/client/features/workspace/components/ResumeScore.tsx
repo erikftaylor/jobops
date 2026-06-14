@@ -14,7 +14,7 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
 
   return (
     <div className="score-circle">
-      <svg width="140" height="140" viewBox="0 0 140 140">
+      <svg width="140" height="140" viewBox="0 0 140 140" aria-label={`Resume score: ${value} out of ${max}`} role="img">
         <circle
           cx="70"
           cy="70"
@@ -59,7 +59,7 @@ export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Resume Score</h3>
-        <div className="skeleton-score">
+        <div className="skeleton-score" role="status" aria-live="polite" aria-label="Resume score is loading">
           <div className="skeleton-score-circle skeleton" />
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="skeleton-score-category">
@@ -76,7 +76,7 @@ export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Resume Score</h3>
-        <div className="workspace-error">
+        <div className="workspace-error" role="alert" aria-live="assertive">
           <div className="workspace-error-message">
             <strong>Couldn't calculate score</strong>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
@@ -88,7 +88,7 @@ export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps
             </p>
           </div>
           <div className="workspace-error-recovery">
-            <button className="workspace-error-retry" onClick={reload}>
+            <button className="workspace-error-retry" onClick={reload} aria-label="Retry resume score calculation">
               Retry
             </button>
           </div>
@@ -116,10 +116,13 @@ export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps
         <div className="score-display">
           <CircularProgress value={score.total} max={score.maxScore} />
           <div className="score-info">
-            <div className="score-confidence">
-              {score.confidence >= 0.9 ? '✓ High Confidence' :
-               score.confidence >= 0.7 ? '⊙ Medium Confidence' :
-               '◐ Lower Confidence'} ({Math.round(score.confidence * 100)}%)
+            <div className="score-confidence" aria-label={`Confidence level: ${score.confidence >= 0.9 ? 'high' : score.confidence >= 0.7 ? 'medium' : 'lower'}, ${Math.round(score.confidence * 100)}%`}>
+              <span aria-hidden="true">{score.confidence >= 0.9 ? '✓ ' :
+               score.confidence >= 0.7 ? '◐ ' :
+               '⚠️ '}</span>
+              {score.confidence >= 0.9 ? 'High Confidence' :
+               score.confidence >= 0.7 ? 'Medium Confidence' :
+               'Lower Confidence'} ({Math.round(score.confidence * 100)}%)
             </div>
             {score.recommendations.length > 0 && (
               <div className="score-recommendations">
@@ -153,8 +156,8 @@ export const ResumeScore = memo(function ResumeScore({ jobId }: ResumeScoreProps
           ))}
         </div>
 
-        <button className="workspace-back-btn" style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }}>
-          View Detailed Breakdown →
+        <button className="workspace-back-btn" style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }} aria-label="View detailed score breakdown by category">
+          View Detailed Breakdown
         </button>
       </div>
     </div>

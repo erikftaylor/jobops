@@ -14,7 +14,7 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
 
   return (
     <div className="fit-circle">
-      <svg width="120" height="120" viewBox="0 0 120 120">
+      <svg width="120" height="120" viewBox="0 0 120 120" aria-label={`Job fit: ${value}%`} role="img">
         <circle
           cx="60"
           cy="60"
@@ -56,7 +56,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Job Fit Analysis</h3>
-        <div className="skeleton-fit">
+        <div className="skeleton-fit" role="status" aria-live="polite" aria-label="Job fit analysis is loading">
           <div className="skeleton-fit-circle skeleton" style={{ width: '120px', height: '120px', borderRadius: '50%', margin: '0 auto 16px' }} />
           <div className="skeleton skeleton-fit-badge" style={{ height: '24px', width: '120px', margin: '0 auto 16px' }} />
           {[1, 2, 3].map(i => (
@@ -74,7 +74,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Job Fit Analysis</h3>
-        <div className="workspace-error">
+        <div className="workspace-error" role="alert" aria-live="assertive">
           <div className="workspace-error-message">
             <strong>Couldn't analyze job fit</strong>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
@@ -86,7 +86,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
             </p>
           </div>
           <div className="workspace-error-recovery">
-            <button className="workspace-error-retry" onClick={() => window.location.reload()}>
+            <button className="workspace-error-retry" onClick={() => window.location.reload()} aria-label="Retry job fit analysis">
               Retry
             </button>
           </div>
@@ -139,7 +139,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Strong Matches */}
         {fit.strongMatches.length > 0 && (
           <div className="fit-section">
-            <h4 className="fit-section-title">✓ Strong Matches</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">✓ </span>Strong Matches</h4>
             <div className="fit-matches-list">
               {fit.strongMatches.map((match, idx) => (
                 <div key={idx} className="fit-match-item strong">
@@ -153,7 +153,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Weak Matches */}
         {fit.weakMatches.length > 0 && (
           <div className="fit-section">
-            <h4 className="fit-section-title">⚠ Weak Matches</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">⚠ </span>Weak Matches</h4>
             <div className="fit-matches-list">
               {fit.weakMatches.map((match, idx) => (
                 <div key={idx} className="fit-match-item weak">
@@ -167,7 +167,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Rejection Risks */}
         {fit.rejectionRisks.length > 0 && (
           <div className="fit-section">
-            <h4 className="fit-section-title">⚠️ Rejection Risks</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">⚠️ </span>Rejection Risks</h4>
             {fit.rejectionRisks.map((risk, idx) => (
               <div key={idx} className="fit-risk-warning">
                 • {risk}
@@ -179,7 +179,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Interview Talking Points */}
         {fit.interviewTalkingPoints.length > 0 && (
           <div className="fit-section">
-            <h4 className="fit-section-title">💡 Interview Talking Points</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">💡 </span>Interview Talking Points</h4>
             <div className="fit-talking-points">
               {fit.interviewTalkingPoints.map((point, idx) => (
                 <div key={idx} className="fit-talking-point">
@@ -193,7 +193,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Positioning Angle */}
         {fit.recommendedPositioningAngle && (
           <div className="fit-section">
-            <h4 className="fit-section-title">🎯 Recommended Positioning</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">🎯 </span>Recommended Positioning</h4>
             <div className="fit-positioning">
               {fit.recommendedPositioningAngle}
             </div>
@@ -203,7 +203,7 @@ export const JobFitDashboard = memo(function JobFitDashboard({ jobId }: JobFitDa
         {/* Success Likelihood */}
         {fit.likelihood && (
           <div className="fit-section">
-            <h4 className="fit-section-title">📊 Success Likelihood</h4>
+            <h4 className="fit-section-title"><span aria-hidden="true">📊 </span>Success Likelihood</h4>
             <div className="fit-likelihood">
               <div className="fit-likelihood-item">
                 <div className="fit-likelihood-label">Phone Screen</div>
