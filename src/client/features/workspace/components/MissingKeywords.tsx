@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKeywordAnalysis } from '../hooks';
 import { useKeywordActions } from '../hooks/useKeywordActions';
+import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface MissingKeywordsProps {
   jobId: string | undefined;
@@ -16,11 +17,29 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
   const [actioningKeyword, setActioningKeyword] = useState<string | null>(null);
   const [proposalIds, setProposalIds] = useState<Map<string, string>>(new Map());
 
+  useEffect(() => {
+    if (analysis) {
+      const criticalCount = analysis.missingKeywords.filter(k => k.importance === 'critical').length;
+      AnalyticsEvents.keywordAnalysisComplete(analysis.matchPercentage, analysis.missingKeywords.length, criticalCount);
+    }
+  }, [analysis?.matchPercentage]);
+
   if (isLoading) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Missing Keywords</h3>
-        <div className="workspace-loading">Analyzing keywords...</div>
+        <div className="skeleton-keywords">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="skeleton-keyword-card">
+              <div className="skeleton-keyword-name skeleton" style={{ width: '60%', height: '16px', marginBottom: '12px' }} />
+              <div className="skeleton-keyword-meta skeleton" style={{ width: '40%', height: '12px', marginBottom: '12px' }} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="skeleton skeleton-btn" style={{ flex: 1, height: '32px' }} />
+                <div className="skeleton skeleton-btn" style={{ flex: 1, height: '32px' }} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -29,7 +48,26 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Missing Keywords</h3>
-        <div className="workspace-error">{error}</div>
+        <div className="workspace-error">
+          <div className="workspace-error-message">
+            <strong>Couldn't analyze keywords</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+              {error === 'Failed to fetch keywords'
+                ? 'Check your internet connection and try again.'
+                : error.includes('Claude')
+                ? 'The AI service is temporarily unavailable. Please try again in a moment.'
+                : 'An unexpected error occurred. Please refresh and try again.'}
+            </p>
+          </div>
+          <div className="workspace-error-recovery">
+            <button
+              className="workspace-error-retry"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -83,6 +121,7 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
 
       // Auto-accept the proposal
       await acceptKeywordSuggestion(proposal.id);
+      AnalyticsEvents.keywordAccepted(keyword);
     } catch (err) {
       console.error('Error adding keyword:', err);
     } finally {
@@ -99,6 +138,7 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
         const proposal = await proposeKeyword(keyword, '', 'resume');
         await ignoreKeywordSuggestion(proposal.id);
         setProposalIds(new Map(proposalIds).set(keyword, proposal.id));
+        AnalyticsEvents.keywordIgnored(keyword);
       } catch (err) {
         console.error('Error ignoring keyword:', err);
       } finally {
@@ -110,6 +150,7 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
     try {
       setActioningKeyword(keyword);
       await ignoreKeywordSuggestion(proposalId);
+      AnalyticsEvents.keywordIgnored(keyword);
     } catch (err) {
       console.error('Error ignoring keyword:', err);
     } finally {
@@ -185,26 +226,28 @@ export function MissingKeywords({ jobId }: MissingKeywordsProps) {
                 )}
 
                 <div className="keyword-actions">
-                  <button
-                    className="keyword-action-btn"
-                    onClick={() => toggleExpanded(keyword.keyword)}
-                    disabled={isProposing || actioningKeyword === keyword.keyword}
-                  >
-                    {isExpanded ? 'Hide' : 'Review'}
-                  </button>
+                  {!isExpanded && (
+                    <button
+                      className="keyword-action-btn"
+                      onClick={() => toggleExpanded(keyword.keyword)}
+                      disabled={isProposing || actioningKeyword === keyword.keyword}
+                    >
+                      See Suggestion
+                    </button>
+                  )}
                   <button
                     className="keyword-action-btn primary"
                     onClick={() => handleAddKeyword(keyword.keyword, keyword.suggestedLanguage)}
                     disabled={isProposing || actioningKeyword === keyword.keyword}
                   >
-                    {actioningKeyword === keyword.keyword ? 'Adding...' : 'Add to Resume'}
+                    {actioningKeyword === keyword.keyword ? 'Adding...' : 'Add This Keyword'}
                   </button>
                   <button
                     className="keyword-action-btn"
                     onClick={() => handleIgnoreKeyword(keyword.keyword)}
                     disabled={isProposing || actioningKeyword === keyword.keyword}
                   >
-                    {actioningKeyword === keyword.keyword ? 'Ignoring...' : 'Ignore'}
+                    {actioningKeyword === keyword.keyword ? 'Dismissing...' : 'Not Relevant'}
                   </button>
                 </div>
               </div>

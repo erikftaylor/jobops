@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface ArtifactVariant {
   type: string;
@@ -38,9 +39,11 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
         // Set active tab to first variant if available
         if (data.variants && data.variants.length > 0) {
           setActiveTab(data.variants[0].type as ComparisonTab);
+          AnalyticsEvents.artifactGenerated(data.variants[0].type, data.variants[0].score);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
+        AnalyticsEvents.artifactGenerationError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setIsLoading(false);
       }
@@ -48,6 +51,14 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
 
     loadArtifacts();
   }, [jobId]);
+
+  const handleTabChange = (tabType: ComparisonTab) => {
+    setActiveTab(tabType);
+    const variant = variants.find(v => v.type === tabType);
+    if (variant) {
+      AnalyticsEvents.artifactSwitched(tabType);
+    }
+  };
 
   const currentVariant = variants.find(v => v.type === activeTab);
 
@@ -58,8 +69,14 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
         <p className="workspace-card-subtitle">
           Compare different versions and their scores
         </p>
-        <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
-          Loading artifact variants...
+        <div className="skeleton-artifacts">
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="skeleton" style={{ flex: 1, height: '40px', borderRadius: '6px' }} />
+            ))}
+          </div>
+          <div className="skeleton" style={{ height: '200px', marginBottom: '16px', borderRadius: '6px' }} />
+          <div className="skeleton" style={{ height: '40px', borderRadius: '6px' }} />
         </div>
       </div>
     );
@@ -72,8 +89,22 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
         <p className="workspace-card-subtitle">
           Compare different versions and their scores
         </p>
-        <div style={{ padding: '24px', textAlign: 'center', color: '#d32f2f' }}>
-          Error: {error}
+        <div className="workspace-error">
+          <div className="workspace-error-message">
+            <strong>Couldn't generate resume versions</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+              {error.includes('fetch')
+                ? 'Check your internet connection and try again.'
+                : error.includes('timeout')
+                ? 'Generation is taking longer than expected. Please try again in a moment.'
+                : 'An unexpected error occurred. Please refresh and try again.'}
+            </p>
+          </div>
+          <div className="workspace-error-recovery">
+            <button className="workspace-error-retry" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -92,7 +123,7 @@ export function ArtifactComparison({ jobId }: ArtifactComparisonProps) {
             <button
               key={variant.type}
               className={`comparison-tab ${activeTab === variant.type ? 'active' : ''}`}
-              onClick={() => setActiveTab(variant.type as ComparisonTab)}
+              onClick={() => handleTabChange(variant.type as ComparisonTab)}
             >
               <span>{variant.description}</span>
               <span

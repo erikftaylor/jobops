@@ -168,16 +168,53 @@ textarea:focus-visible {
   border-radius: 4px;
 }
 
-.skeleton-keywords-list {
+.skeleton-keywords {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.skeleton-keyword-item {
-  height: 80px;
-  skeleton: true;
+.skeleton-keyword-card {
+  padding: 12px;
+  border: 1px solid #e8e8e8;
   border-radius: 6px;
+  background: #f9f9f9;
+}
+
+.skeleton-keyword-name {
+  height: 16px;
+  border-radius: 4px;
+}
+
+.skeleton-keyword-meta {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-btn {
+  border-radius: 6px;
+}
+
+.skeleton-fit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-fit-badge {
+  border-radius: 4px;
+}
+
+.skeleton-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-artifacts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .skeleton-chat-button {
@@ -191,7 +228,6 @@ textarea:focus-visible {
   height: 200px;
   skeleton: true;
   border-radius: 6px;
-}
 }
 
 .workspace-error {
@@ -995,6 +1031,22 @@ textarea:focus-visible {
   color: #999;
   font-size: 13px;
   padding: 24px 16px;
+}
+
+.chat-response-loading {
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-response-error {
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 13px;
 }
 
 .chat-response-content {

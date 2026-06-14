@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useHeatmap } from '../hooks';
+import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface RecruiterHeatmapProps {
   jobId: string | undefined;
@@ -7,11 +9,25 @@ interface RecruiterHeatmapProps {
 export function RecruiterHeatmap({ jobId }: RecruiterHeatmapProps) {
   const { heatmap, isLoading, error } = useHeatmap(jobId);
 
+  useEffect(() => {
+    if (heatmap) {
+      AnalyticsEvents.heatmapAnalyzed(heatmap.overallVisibility, heatmap.sections.length);
+    }
+  }, [heatmap?.overallVisibility]);
+
   if (isLoading) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Recruiter Heatmap</h3>
-        <div className="workspace-loading">Analyzing visibility...</div>
+        <div className="skeleton-heatmap">
+          <div className="skeleton" style={{ height: '60px', marginBottom: '16px', borderRadius: '6px' }} />
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} style={{ marginBottom: '12px' }}>
+              <div className="skeleton" style={{ height: '14px', width: '50%', marginBottom: '8px' }} />
+              <div className="skeleton" style={{ height: '12px', width: '100%' }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -20,7 +36,21 @@ export function RecruiterHeatmap({ jobId }: RecruiterHeatmapProps) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Recruiter Heatmap</h3>
-        <div className="workspace-error">{error}</div>
+        <div className="workspace-error">
+          <div className="workspace-error-message">
+            <strong>Couldn't analyze visibility</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+              {error.includes('fetch')
+                ? 'Check your internet connection and try again.'
+                : 'An unexpected error occurred. Please refresh and try again.'}
+            </p>
+          </div>
+          <div className="workspace-error-recovery">
+            <button className="workspace-error-retry" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

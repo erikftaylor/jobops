@@ -61,7 +61,27 @@ export const AnalyticsEvents = {
       properties: { score, categories },
     }),
 
+  // Job Fit
+  jobFitAnalyzed: (overallFit: number, confidenceLevel: string) =>
+    analytics.track({
+      name: 'job_fit_analyzed',
+      properties: { overallFit, confidenceLevel },
+    }),
+
+  // Heatmap
+  heatmapAnalyzed: (overallVisibility: number, sectionCount: number) =>
+    analytics.track({
+      name: 'heatmap_analyzed',
+      properties: { overallVisibility, sectionCount },
+    }),
+
   // Keywords
+  keywordAnalysisComplete: (matchPercentage: number, totalMissing: number, criticalCount: number) =>
+    analytics.track({
+      name: 'keyword_analysis_complete',
+      properties: { matchPercentage, totalMissing, criticalCount },
+    }),
+
   keywordProposed: (keyword: string, importance: string) =>
     analytics.track({
       name: 'keyword_proposed',
@@ -110,6 +130,12 @@ export const AnalyticsEvents = {
     analytics.track({
       name: 'artifact_generated',
       properties: { variantType, score },
+    }),
+
+  artifactGenerationError: (errorMessage?: string) =>
+    analytics.track({
+      name: 'artifact_generation_error',
+      properties: { errorMessage },
     }),
 
   // Score Recalculation

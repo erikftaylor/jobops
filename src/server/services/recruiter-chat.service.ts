@@ -20,75 +20,57 @@ export class RecruiterChatService {
     } = {
       worry: {
         question: 'What would worry a recruiter?',
-        prompt: `You are an expert recruiter reviewing this resume for the role described below.
+        prompt: `You are a hiring manager screening this candidate for: "${jobDescription.split('\\n')[0] || 'this role'}"
 
-Career Model:
-${JSON.stringify(careerModel, null, 2)}
+RESUME SUMMARY:
+Name: ${careerModel.fullName}
+Current Role: ${careerModel.sections.experience?.[0]?.title || 'Not specified'}
+Years of Experience: ${(careerModel.sections.experience?.length || 1) * 3}
+Key Skills: ${(careerModel.sections.skills || []).slice(0, 5).join(', ')}
 
-Job Description:
-${jobDescription}
+SCORE: ${score.total}/100 | FIT: ${fit.overallFit}%
 
-Resume Score: ${score.total}/100
-Job Fit: ${fit.overallFit}%
+CRITICAL: After scanning this resume, what specific concerns would prevent you from moving forward? Be direct and specific.
 
-What would worry you about this candidate? Identify:
-1. The main concerns
-2. Any red flags
-3. Specific improvements needed
-4. Suggested language or experience to add
-
-Respond with JSON:
 {
-  "answer": "Main concerns as a recruiter...",
-  "risks": ["risk1", "risk2"],
-  "suggestedChanges": [
-    { "target": "skills|summary|experience", "operation": "add|remove|modify", "value": "...", "reasoning": "..." }
-  ],
-  "followUpQuestions": ["question1"],
+  "answer": "I would be concerned about...",
+  "risks": ["specific concern 1", "specific concern 2"],
+  "suggestedChanges": [{"target": "skills|summary|experience", "operation": "add|modify", "value": "specific change", "reasoning": "why this helps"}],
+  "followUpQuestions": ["verification question"],
   "confidence": 0.8
 }`,
       },
       weakest: {
         question: 'Where is my resume weakest?',
-        prompt: `You are an expert career coach. Review this resume and score:
+        prompt: `You are reviewing this resume against: "${jobDescription.split('\\n')[0] || 'the job description'}"
 
-Career Model:
-${JSON.stringify(careerModel, null, 2)}
+CANDIDATE: ${careerModel.fullName}
+SCORE: ${score.total}/100
 
-Job Description:
-${jobDescription}
+Which 2-3 sections hurt this resume the most for THIS job? Rank by impact.
 
-Resume Score: ${score.total}/100
-
-What are the weakest areas that need improvement? Respond with:
 {
-  "answer": "The weakest areas are...",
-  "risks": ["weakness1", "weakness2"],
-  "suggestedChanges": [...],
-  "followUpQuestions": [...],
+  "answer": "The biggest weaknesses are: 1) ..., 2) ...",
+  "risks": ["weakness that could trigger immediate rejection", "concern that raises questions"],
+  "suggestedChanges": [{"target": "section", "operation": "modify", "value": "how to fix", "reasoning": "impact on fit"}],
+  "followUpQuestions": ["what would help address this?"],
   "confidence": 0.85
 }`,
       },
       interview: {
         question: 'Would this likely get an interview?',
-        prompt: `You are a hiring manager. Would you interview this candidate?
+        prompt: `You are screening resumes for: "${jobDescription.split('\\n')[0] || 'this role'}"
 
-Resume Score: ${score.total}/100
-Job Fit: ${fit.overallFit}%
-Interview Likelihood: ${fit.likelihood.phoneScreen.toFixed(0)}%
+CANDIDATE: ${careerModel.fullName}
+SCORE: ${score.total}/100 | FIT: ${fit.overallFit}% | ESTIMATED PHONE SCREEN: ${fit.likelihood.phoneScreen.toFixed(0)}%
 
-Career:
-${JSON.stringify(careerModel, null, 2)}
+Your gut: Would you phone screen this person?
 
-Job:
-${jobDescription}
-
-Respond with honest assessment:
 {
-  "answer": "Yes/No, here's why...",
-  "risks": [...],
-  "suggestedChanges": [...],
-  "followUpQuestions": [...],
+  "answer": "Yes/No. Reasons: ...",
+  "risks": ["blocker if any", "concern that might kill it"],
+  "suggestedChanges": [{"target": "section", "operation": "add|modify", "value": "would change yes to maybe", "reasoning": "impact"}],
+  "followUpQuestions": ["question you'd ask on phone screen"],
   "confidence": 0.9
 }`,
       },

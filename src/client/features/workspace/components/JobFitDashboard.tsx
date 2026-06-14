@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useJobFit } from '../hooks';
+import { AnalyticsEvents } from '@client/lib/analytics';
 
 interface JobFitDashboardProps {
   jobId: string | undefined;
@@ -44,11 +46,26 @@ function CircularProgress({ value, max = 100 }: { value: number; max?: number })
 export function JobFitDashboard({ jobId }: JobFitDashboardProps) {
   const { fit, isLoading, error } = useJobFit(jobId);
 
+  useEffect(() => {
+    if (fit) {
+      AnalyticsEvents.jobFitAnalyzed(fit.overallFit, fit.confidenceLevel);
+    }
+  }, [fit?.overallFit]);
+
   if (isLoading) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Job Fit Analysis</h3>
-        <div className="workspace-loading">Analyzing job fit...</div>
+        <div className="skeleton-fit">
+          <div className="skeleton-fit-circle skeleton" style={{ width: '120px', height: '120px', borderRadius: '50%', margin: '0 auto 16px' }} />
+          <div className="skeleton skeleton-fit-badge" style={{ height: '24px', width: '120px', margin: '0 auto 16px' }} />
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ marginBottom: '16px' }}>
+              <div className="skeleton" style={{ height: '16px', width: '60%', marginBottom: '8px' }} />
+              <div className="skeleton" style={{ height: '12px', width: '100%' }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -57,7 +74,23 @@ export function JobFitDashboard({ jobId }: JobFitDashboardProps) {
     return (
       <div className="workspace-card">
         <h3 className="workspace-card-title">Job Fit Analysis</h3>
-        <div className="workspace-error">{error}</div>
+        <div className="workspace-error">
+          <div className="workspace-error-message">
+            <strong>Couldn't analyze job fit</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+              {error.includes('fetch')
+                ? 'Check your internet connection and try again.'
+                : error.includes('Claude')
+                ? 'The AI service is temporarily unavailable. Please try again in a moment.'
+                : 'An unexpected error occurred. Please refresh and try again.'}
+            </p>
+          </div>
+          <div className="workspace-error-recovery">
+            <button className="workspace-error-retry" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
