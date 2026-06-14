@@ -11,87 +11,86 @@ This document tracks known issues, limitations, and technical debt for JobOps. I
 
 ### 1. Settings Modal Not Fully Implemented
 
-**Status:** Known limitation  
+**Status:** Known limitation — Deferred for v1.0.1+  
 **Priority:** P1 — Affects user experience  
-**Severity:** Medium — Buttons present but non-functional
+**Severity:** Medium — Button present but functionality incomplete
 
 #### Description
-The Settings button is present in the UI but the modal content is not fully implemented. Users clicking the button see an empty or incomplete modal.
+The Settings button (⚙️) is visible in the app footer, but the modal content is not fully implemented. Users clicking the button may experience confusion as the functionality is incomplete.
+
+#### Current State (v1.0.0-rc1)
+- Settings button exists in footer
+- Modal appears on click
+- No essential settings available yet
+- Tab shows "Career Profile" data (working, read-only)
 
 #### Impact
-- Users cannot access settings
-- Confusing user experience
-- Users may think features are broken
+- Users cannot access application settings
+- Settings expectations not met
+- Should be hidden or clearly marked "Coming Soon" to prevent confusion
 
-#### Workaround
-- Disable settings button with tooltip "Settings coming soon"
-- Or hide settings button entirely until implementation complete
+#### Recommended Approach (v1.0.0-rc1)
+**Option A (Recommended):** Hide settings button with CSS or conditional rendering
+```typescript
+// Uncomment to hide settings button until implementation
+// display: none in app.css or conditional render
+```
+
+**Option B:** Show tooltip "Settings coming in v1.0.1"
 
 #### Root Cause
-Settings UI started but not completed in this release cycle.
+Settings feature was scoped out of v1.0.0 to focus on core job analysis and onboarding workflows.
 
-#### Fix Plan
-- Create settings modal component with basic options
-- Implement theme toggle (light/dark if applicable)
-- Add data export option
-- Add help/documentation link
-- Estimated effort: 1-2 hours
+#### Post-v1.0.0 Fix Plan (v1.0.1+)
+- [ ] Complete settings modal implementation
+- [ ] Add theme toggle (light/dark)
+- [ ] Add data export option
+- [ ] Add help/documentation link
+- [ ] Add unit tests for settings
+- [ ] Estimated effort: 2-3 hours
 
 #### Post-v1.0.0 Action
-- [ ] Complete settings modal implementation
-- [ ] Add unit tests for settings
-- [ ] Update documentation
-- [ ] Push as v1.0.1 or v1.1.0 depending on feature scope
+- [ ] Decide: hide settings button or show "Coming Soon"
+- [ ] Implement basic settings in v1.0.1
+- [ ] Push as v1.0.1 patch release
 
 ---
 
-### 2. Career Document Import Flow Could Be Clearer
+### 2. Career Document Import Flow
 
-**Status:** Known limitation  
+**Status:** Partially addressed through first-run onboarding  
 **Priority:** P1 — Affects onboarding  
-**Severity:** Medium — Users may be confused on first use
+**Severity:** Medium (mitigated by onboarding implementation)
 
 #### Description
-The initial setup doesn't clearly guide users to import their career document. The NewJobForm asks for a job description but doesn't explain that a career document is the primary input.
+The initial setup flow for importing/loading the career document was incomplete. v1.0.0-rc1 addresses this with a Welcome panel that explains the three-step workflow and Career Profile status.
 
-#### Impact
-- First-time users may be confused
-- Users may not understand the system architecture
-- Reduced clarity on what "Master Career Document" means
+#### What v1.0.0-rc1 Addresses
+- ✅ First-time users see Welcome panel (not empty job list)
+- ✅ Three-step workflow clearly explained (Career Profile → Add Job → Analyze & Optimize)
+- ✅ Career Profile status displayed (loaded/missing with helpful guidance)
+- ✅ Clear CTA button guides to next action
+- ✅ "Career Profile" terminology (clearer than "Master Career Document")
 
-#### Current Behavior
-1. User opens app
-2. Sees "Add new job" button
-3. Not told to provide career document first
-4. Form says "Job description is required"
-5. User confused about the flow
+#### Remaining Gap: Full Upload/Import UI
+The current implementation assumes the career document file exists at `data/Master_Career_Document.md`. Full feature would include:
+- UI for uploading/importing career document
+- File validation and parsing
+- Visual feedback during import
+- Option to replace existing document
 
-#### Expected Behavior
-1. User opens app for first time
-2. Sees welcome screen or onboarding
-3. Guided to provide/verify career document
-4. Then shown job analysis flow
-
-#### Workaround
-- Add inline help text: "Your Master Career Document is used to analyze jobs against your background"
-- Add onboarding banner on first visit
-- Update README with clearer flow explanation
-
-#### Root Cause
-Feature was built assuming career document pre-loaded. First-time user flow not optimized.
-
-#### Fix Plan
-- Add onboarding screen on first visit
-- Show 3-step flow: Load CV → Add job → Analyze
-- Add help text to NewJobForm
-- Add "About JobOps" explanation
-- Estimated effort: 1-2 hours
+#### Fix Plan (Post-v1.0.0)
+- Create `/api/career-profile/upload` endpoint
+- Build UI form for document upload
+- Add file validation and error handling
+- Implement progress indicator
+- Estimated effort: 3-4 hours
 
 #### Post-v1.0.0 Action
-- [ ] Implement onboarding screen
-- [ ] Test with first-time users
-- [ ] Gather feedback
-- [ ] Refine flow based on usage
+- [ ] Implement career document upload UI
+- [ ] Add backend upload endpoint
+- [ ] Test with various document formats
+- [ ] Document upload procedure
 - [ ] Push as v1.0.1 or v1.1.0
 
 ---

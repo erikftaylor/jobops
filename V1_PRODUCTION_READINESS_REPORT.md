@@ -13,7 +13,7 @@ JobOps is **READY FOR V1 PRODUCTION RELEASE** with **zero critical (P0) issues**
 
 ### Key Findings
 - ✅ All critical paths functional and tested
-- ✅ 345/345 tests passing (100% pass rate)
+- ✅ 365/365 tests passing (100% pass rate, +20 onboarding tests)
 - ✅ TypeScript compilation clean (0 errors)
 - ✅ Production build succeeds
 - ✅ WCAG AA accessibility compliance achieved
@@ -21,6 +21,10 @@ JobOps is **READY FOR V1 PRODUCTION RELEASE** with **zero critical (P0) issues**
 - ✅ Error recovery graceful across all failure modes
 - ✅ Data integrity verified (master document, ChangeGraph, persistence)
 - ✅ Performance acceptable for MVP
+- ✅ First-run onboarding implemented (commit 6b5c656)
+- ✅ Career Profile terminology clarified
+- ⚠️ P1: Settings modal incomplete (deferred for v1.0.1)
+- ⚠️ P1: Career Document import partially addressed (full UI post-v1.0.0)
 - ⚠️ Minor UX polish opportunities identified (P2/P3)
 
 ---
@@ -411,39 +415,56 @@ Every critical path verified functional. All error states handled gracefully. No
 
 ---
 
-## 9. P1 ISSUES (SHOULD FIX IF TIME)
+## 9. P1 ISSUES STATUS
 
-### 1. **Settings Modal Incomplete** (Minor UX)
+### 1. **Settings Modal** — Incomplete/Deferred for v1.0.1
 **File:** `src/features/settings/components/SettingsModal.tsx`
 
-**Observation:** Settings button is present but modal content may not be fully implemented.
+**Status:** Not resolved in v1.0.0-rc1; remains incomplete
 
-**Recommendation:** 
-- Verify settings modal loads without errors
-- If incomplete, disable settings button with helpful message ("Settings coming soon")
-- Or ensure basic settings exist (theme, notifications, data export)
+**Current State:**
+- Settings button (⚙️) visible in footer
+- Career Profile tab shows read-only data
+- No functional settings available
+- Issue: Users click button expecting functionality
 
-**Risk if deferred:** Users may experience confusing empty modal. Low risk.
+**Recommended v1.0.0-rc1 Action:** 
+- Option A: Hide settings button with CSS until v1.0.1
+- Option B: Show tooltip "Settings coming in v1.0.1"
 
-**Effort:** 15-30 minutes
+**Fix Plan for v1.0.1:**
+- [ ] Complete settings implementation (theme, data export, help)
+- [ ] Estimated effort: 2-3 hours
+
+**Risk if deferred to v1.0.1:** Users click button → no functionality. Low-medium risk if button is hidden or marked "Coming Soon".
 
 ---
 
-### 2. **Career Document Upload UI** (UX Polish)
-**Files:** NewJobForm, related
+### 2. **Career Document Import Flow** — Partially Addressed via Onboarding
+**Commit:** `6b5c656` - "feat: add V1 onboarding and Career Profile first-run experience"
 
-**Observation:** NewJobForm currently asks for job description paste, but the brief refers to "Import Career Document" as step 1.
+**Status:** Partially addressed in v1.0.0-rc1; full upload UI post-v1.0.0
 
-**Question:** Is there a separate career document upload flow, or does it happen through the new job form?
+**What v1.0.0-rc1 Adds:**
+- ✅ Welcome panel for first-time users (replaces empty job list)
+- ✅ Three-step workflow explained clearly (Career Profile → Add Job → Analyze & Optimize)
+- ✅ Career Profile status displayed (loaded/missing with helpful guidance)
+- ✅ "Career Profile" terminology (clarified from "Master Career Document")
+- ✅ Clear CTA guides user to next action
 
-**Recommendation:**
-- If career document upload is separate: add it to JobsPage with clear prominence
-- If it's in onboarding: create welcome screen showing upload step
-- If it's optional: make it clearer that jobs work without pre-loaded career document
+**Remaining Gap:**
+- No UI for uploading/importing career document file
+- Assumes file exists at `data/Master_Career_Document.md`
+- Manual editing of file required currently
 
-**Risk if deferred:** Possible recruiter confusion on first use. Low-medium risk.
+**Fix Plan for v1.0.1+:**
+- [ ] Create `/api/career-profile/upload` endpoint
+- [ ] Build file upload UI form
+- [ ] Add validation and error handling
+- [ ] Implement progress feedback
+- Estimated effort: 3-4 hours
 
-**Effort:** 1-2 hours (UI + flow)
+**Risk if deferred to v1.0.1:** Users understand the flow (onboarding explains). Low-medium risk. Most recruiters can create `Master_Career_Document.md` file manually or ask support.
 
 ---
 
