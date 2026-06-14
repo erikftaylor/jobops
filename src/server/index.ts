@@ -11,6 +11,7 @@ import settingsRouter from "./routes/settings.js";
 import analysisRouter from "./routes/analysis.js";
 import conversationRouter from "./routes/conversation.js";
 import artifactsRouter, { initializeArtifactServices } from "./routes/artifacts.js";
+import jobArtifactsRouter, { initializeJobArtifactServices } from "./routes/job-artifacts.js";
 import workspaceRouter, { initializeWorkspaceServices } from "./routes/workspace.js";
 
 fileURLToPath(import.meta.url); // Keep for potential future use
@@ -50,6 +51,7 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/jobs", analysisRouter);
 app.use("/api/conversations", conversationRouter);
 app.use("/api/artifacts", artifactsRouter);
+app.use("/api/jobs", jobArtifactsRouter);
 app.use("/api/workspace", workspaceRouter);
 
 app.get("/health", (_req: Request, res: Response) => {
@@ -106,6 +108,11 @@ async function start() {
     console.log("🎨 Initializing artifact services...");
     initializeArtifactServices();
     console.log("✅ Artifact services initialized");
+
+    // Initialize job artifact services (depends on database)
+    console.log("🎯 Initializing job artifact services...");
+    initializeJobArtifactServices();
+    console.log("✅ Job artifact services initialized");
 
     // Initialize workspace services (depends on database)
     console.log("💼 Initializing workspace services...");
