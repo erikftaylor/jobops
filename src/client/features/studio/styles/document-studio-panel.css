@@ -67,6 +67,58 @@
   margin-top: var(--space-md);
 }
 
+.artifact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-secondary);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-sm);
+}
+
+.artifact-info .version,
+.artifact-info .date {
+  display: block;
+}
+
+.cta-button {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-size: var(--font-size-base);
+}
+
+.cta-button.primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.cta-button.primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.cta-button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cta-button.success {
+  background-color: var(--color-success, #22c55e);
+  color: white;
+}
+
+.cta-button.disabled {
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  cursor: not-allowed;
+}
+
 .card-cta-section {
   display: flex;
   gap: var(--space-sm);
@@ -96,44 +148,6 @@
 /* Cover Letter Card */
 .cover-letter-card {
   border-left: 3px solid var(--color-warning);
-}
-
-.coming-soon {
-  margin: 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
-.cta-button {
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-  font-size: var(--font-size-sm);
-}
-
-.cta-button.disabled {
-  background-color: var(--color-bg);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  cursor: not-allowed;
-}
-
-.cta-button.primary {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.cta-button.primary:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
-}
-
-.cta-button.success {
-  background-color: var(--color-success);
-  color: white;
 }
 
 /* Export Section */

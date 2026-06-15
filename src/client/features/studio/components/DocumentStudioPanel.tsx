@@ -19,10 +19,50 @@ export default function DocumentStudioPanel({
   onMarkApplied,
   onOpenWorkspace,
 }: DocumentStudioPanelProps) {
-  const { artifact: resumeArtifact, error: resumeError, copyToClipboard, downloadPDF } = useArtifacts();
-  const [showResumePreview, setShowResumePreview] = useState(false);
+  const { artifact: currentArtifact, error, copyToClipboard, downloadPDF, generateCoverLetter } = useArtifacts();
+  const [artifactType, setArtifactType] = useState<"resume" | "cover_letter">("resume");
+  const [showPreview, setShowPreview] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [applyingStatus, setApplyingStatus] = useState(false);
+
+  // Determine if current artifact matches selected type
+  const displayedArtifact = currentArtifact?.artifactType === artifactType ? currentArtifact : null;
+
+  const handleCopyText = async () => {
+    if (displayedArtifact) {
+      await copyToClipboard(displayedArtifact.renderedText);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (displayedArtifact && selectedJob) {
+      setExportingPDF(true);
+      try {
+        await downloadPDF(selectedJob.id, displayedArtifact.id);
+      } finally {
+        setExportingPDF(false);
+      }
+    }
+  };
+
+  const handleMarkApplied = async () => {
+    setApplyingStatus(true);
+    try {
+      if (selectedJob) {
+        // Update job state to applied
+        await onStateChange("applied");
+        // Notify parent
+        await onMarkApplied();
+      }
+    } catch (err) {
+      console.error("Failed to mark applied:", err);
+    } finally {
+      setApplyingStatus(false);
+    }
+  };
 
   if (!selectedJob) {
     return (
@@ -45,25 +85,6 @@ export default function DocumentStudioPanel({
     currentState === "approved" ||
     currentState === "generated";
 
-  const handleCopyText = async () => {
-    if (resumeArtifact) {
-      await copyToClipboard(resumeArtifact.renderedText);
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2000);
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    if (resumeArtifact) {
-      setExportingPDF(true);
-      try {
-        await downloadPDF(selectedJob.id, resumeArtifact.id);
-      } finally {
-        setExportingPDF(false);
-      }
-    }
-  };
-
   return (
     <div className="document-studio-panel">
       <div className="panel-header">
@@ -84,6 +105,7 @@ export default function DocumentStudioPanel({
               <GenerateButton
                 jobId={selectedJob.id}
                 onArtifactCreated={() => {
+                  setArtifactType("resume");
                   if (currentState !== "generated") {
                     onStateChange("generated");
                   }
@@ -97,15 +119,19 @@ export default function DocumentStudioPanel({
             )}
           </div>
 
-          {resumeError && (
-            <div className="error-message">{resumeError}</div>
+          {error && artifactType === "resume" && (
+            <div className="error-message">{error}</div>
           )}
 
-          {resumeArtifact && (
+          {displayedArtifact && artifactType === "resume" && (
             <div className="card-actions-additional">
+              <div className="artifact-info">
+                <span className="version">Version {displayedArtifact.version}</span>
+                <span className="date">{new Date(displayedArtifact.createdAt).toLocaleDateString()}</span>
+              </div>
               <button
                 className="action-link"
-                onClick={() => setShowResumePreview(true)}
+                onClick={() => setShowPreview(true)}
               >
                 Preview Resume
               </button>
@@ -134,11 +160,52 @@ export default function DocumentStudioPanel({
           </p>
 
           <div className="card-actions">
-            <button className="cta-button disabled" disabled>
-              Generate Letter
-            </button>
-            <p className="coming-soon">Coming in Phase 3</p>
+            {canGenerate && (
+              <button
+                className="cta-button primary"
+                onClick={() => generateCoverLetter(selectedJob.id)}
+              >
+                Generate Cover Letter
+              </button>
+            )}
+            {!canGenerate && (
+              <div className="button-disabled">
+                <p>Analyze the job first to generate a cover letter</p>
+              </div>
+            )}
           </div>
+
+          {error && artifactType === "cover_letter" && (
+            <div className="error-message">{error}</div>
+          )}
+
+          {displayedArtifact && artifactType === "cover_letter" && (
+            <div className="card-actions-additional">
+              <div className="artifact-info">
+                <span className="version">Version {displayedArtifact.version}</span>
+                <span className="date">{new Date(displayedArtifact.createdAt).toLocaleDateString()}</span>
+              </div>
+              <button
+                className="action-link"
+                onClick={() => setShowPreview(true)}
+              >
+                Preview Letter
+              </button>
+              <button
+                className="action-link"
+                onClick={handleCopyText}
+              >
+                {copyFeedback ? "✓ Copied!" : "Copy Text"}
+              </button>
+              <button
+                className="action-link"
+                onClick={handleDownloadPDF}
+                disabled={exportingPDF}
+              >
+                {exportingPDF ? "Downloading..." : "Download PDF"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Workspace Link */}
@@ -163,21 +230,25 @@ export default function DocumentStudioPanel({
           </p>
           <button
             className={`cta-button ${currentState === "applied" ? "success" : "primary"}`}
-            onClick={onMarkApplied}
-            disabled={currentState === "applied"}
+            onClick={handleMarkApplied}
+            disabled={currentState === "applied" || applyingStatus}
           >
-            {currentState === "applied" ? "✓ Marked as Applied" : "Mark as Applied"}
+            {applyingStatus
+              ? "Marking as Applied..."
+              : currentState === "applied"
+                ? "✓ Marked as Applied"
+                : "Mark as Applied"}
           </button>
         </div>
       </div>
 
-      {/* Resume Preview Modal */}
-      {resumeArtifact && (
+      {/* Preview Modal */}
+      {displayedArtifact && (
         <ResumePreviewModal
-          isOpen={showResumePreview}
-          artifact={resumeArtifact}
+          isOpen={showPreview}
+          artifact={displayedArtifact}
           jobId={selectedJob.id}
-          onClose={() => setShowResumePreview(false)}
+          onClose={() => setShowPreview(false)}
           onCopy={handleCopyText}
           onDownload={handleDownloadPDF}
         />

@@ -78,13 +78,13 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
     const { jobId } = req.params;
     const { artifactType = "resume" } = req.body;
 
-    // Only support resume generation in Phase 1
-    if (artifactType !== "resume") {
+    // Support resume and cover letter generation
+    if (!["resume", "cover_letter"].includes(artifactType)) {
       return res.status(400).json({
         status: 400,
         error: {
           code: "UNSUPPORTED_ARTIFACT_TYPE",
-          message: "Only resume generation is supported in Phase 1. Cover letters coming in Phase 2.",
+          message: `Unsupported artifact type: ${artifactType}. Supported types: resume, cover_letter`,
           details: { requestedType: artifactType },
         },
       });
@@ -119,7 +119,7 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
     // Run fit analysis
     const fitAnalysis = svc.fitAnalyzerService.analyze(careerModel, job.description);
 
-    // Generate resume
+    // Generate artifact (resume or cover letter)
     const result = await svc.resumeGeneratorService.generateResume(
       jobId,
       careerModel,
@@ -129,7 +129,8 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
         strengths: fitAnalysis.strongMatches || [],
         gaps: fitAnalysis.experienceGaps.map((g) => g.requirement) || [],
         score: fitAnalysis.overallFit || 0,
-      }
+      },
+      artifactType
     );
 
     if (!result.success) {
@@ -137,7 +138,7 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
         status: 500,
         error: {
           code: result.error?.code || "GENERATION_FAILED",
-          message: result.error?.message || "Resume generation failed",
+          message: result.error?.message || `${artifactType} generation failed`,
           details: {
             attempt: result.error?.attempt,
           },
