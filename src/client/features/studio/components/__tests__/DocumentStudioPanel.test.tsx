@@ -109,7 +109,7 @@ describe("DocumentStudioPanel", () => {
     expect(screen.getByText(/Analyze the job first to generate/)).toBeInTheDocument();
   });
 
-  it("displays Mark as Applied button", () => {
+  it("displays Record Application button", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -118,7 +118,7 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Mark as Applied")).toBeInTheDocument();
+    expect(screen.getByText("Record Application")).toBeInTheDocument();
   });
 
   it("shows applied state when job is marked as applied", () => {
@@ -132,8 +132,8 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    const appliedButton = screen.getByText("✓ Marked as Applied");
-    expect(appliedButton).toBeDisabled();
+    expect(screen.getByText("✓ Recorded")).toBeInTheDocument();
+    expect(screen.getByText("Application complete.")).toBeInTheDocument();
   });
 
   it("displays generate cover letter button when job is analyzed", () => {

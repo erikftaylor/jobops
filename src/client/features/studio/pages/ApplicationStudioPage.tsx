@@ -134,10 +134,7 @@ export default function ApplicationStudioPage({ onOpenWorkspace }: ApplicationSt
 
         {/* Recent Applications Section */}
         <div className="studio-section">
-          <RecentApplicationsPanel
-            onSelectJob={handleJobSelect}
-            selectedJobId={selectedJobId}
-          />
+          <RecentApplicationsPanel />
         </div>
       </div>
     </div>

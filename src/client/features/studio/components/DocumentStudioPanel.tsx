@@ -42,6 +42,7 @@ export default function DocumentStudioPanel({
   const [applyingStatus, setApplyingStatus] = useState(false);
   const [resumeArtifactId, setResumeArtifactId] = useState<string | undefined>();
   const [coverLetterArtifactId, setCoverLetterArtifactId] = useState<string | undefined>();
+  const [appliedDate, setAppliedDate] = useState<Date | null>(null);
 
   const displayedArtifact = currentArtifact?.artifactType === activeTab ? currentArtifact : null;
 
@@ -82,6 +83,8 @@ export default function DocumentStudioPanel({
           resumeArtifactId,
           coverLetterArtifactId,
         });
+        // Set applied date after successful marking
+        setAppliedDate(new Date());
       }
     } catch (err) {
       console.error("Failed to mark applied:", err);
@@ -205,19 +208,57 @@ export default function DocumentStudioPanel({
         )}
       </div>
 
-      {/* Mark Applied Section */}
-      <div className="mark-applied-section">
-        <button
-          className={`cta-button ${currentState === "applied" ? "success" : "primary"}`}
-          onClick={handleMarkApplied}
-          disabled={currentState === "applied" || applyingStatus}
-        >
-          {applyingStatus
-            ? "Marking as Applied..."
-            : currentState === "applied"
-              ? "✓ Marked as Applied"
-              : "Mark as Applied"}
-        </button>
+      {/* Application Recording Section */}
+      <div className="application-recording-section">
+        <h3 className="recording-title">
+          {currentState === "applied" ? "✓ Recorded" : "Application"}
+        </h3>
+
+        {currentState === "applied" ? (
+          <div className="recording-success">
+            <p className="success-message">Application complete.</p>
+            {appliedDate && (
+              <p className="success-date">
+                Applied{" "}
+                {appliedDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            <div className="success-details">
+              {resumeArtifactId && <div className="detail">Resume saved</div>}
+              {coverLetterArtifactId && <div className="detail">Cover letter saved</div>}
+            </div>
+          </div>
+        ) : (
+          <div className="recording-ready">
+            <p className="ready-message">Ready once submitted.</p>
+            <div className="material-checklist">
+              <div className={`material-item ${resumeArtifactId ? "ready" : "pending"}`}>
+                <span className="material-status">
+                  {resumeArtifactId ? "✓" : "○"}
+                </span>
+                <span>Resume</span>
+              </div>
+              <div className={`material-item ${coverLetterArtifactId ? "ready" : "pending"}`}>
+                <span className="material-status">
+                  {coverLetterArtifactId ? "✓" : "○"}
+                </span>
+                <span>Cover Letter</span>
+              </div>
+            </div>
+            <button
+              className="cta-button primary"
+              onClick={handleMarkApplied}
+              disabled={applyingStatus || (!resumeArtifactId && !coverLetterArtifactId)}
+              aria-label="Record application after you submit it"
+            >
+              {applyingStatus ? "Recording..." : "Record Application"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Preview Modal */}

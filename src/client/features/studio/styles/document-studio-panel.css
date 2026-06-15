@@ -120,13 +120,100 @@
   color: var(--color-primary-dark);
 }
 
-/* Mark Applied Section */
-.mark-applied-section {
+/* Application Recording Section */
+.application-recording-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.recording-title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.recording-success {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  background-color: var(--color-bg);
+  border-radius: 4px;
+  border-left: 3px solid var(--color-success);
+}
+
+.success-message {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.success-date {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.success-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.detail {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.recording-ready {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background-color: var(--color-bg);
+  border-radius: 4px;
+}
+
+.ready-message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.material-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.material-item.ready {
+  color: var(--color-text-primary);
+}
+
+.material-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.material-item.ready .material-status {
+  color: var(--color-success);
 }
 
 .cta-button {

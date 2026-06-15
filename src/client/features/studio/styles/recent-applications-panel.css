@@ -1,34 +1,17 @@
 .recent-applications-panel {
-  padding: var(--space-lg);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-}
-
-.recent-applications-panel h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--color-text-primary);
+  gap: var(--space-lg);
 }
 
 .recent-applications-panel.empty,
-.recent-applications-panel.loading,
-.recent-applications-panel.error {
-  justify-content: center;
+.recent-applications-panel.loading {
   text-align: center;
-  min-height: 120px;
 }
 
-.recent-applications-panel .empty-state {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.recent-applications-panel p {
+.empty-state,
+.loading-state,
+.error-state {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
@@ -37,56 +20,33 @@
 .applications-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  max-height: 300px;
+  gap: var(--space-md);
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .application-item {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  padding: var(--space-md);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.application-item:hover {
-  background-color: var(--color-bg);
-  border-color: var(--color-primary);
-}
-
-.application-item.active {
-  background-color: rgba(59, 130, 246, 0.05);
-  border-color: var(--color-primary);
-  font-weight: 500;
-}
-
-.app-header {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-sm);
+  align-items: baseline;
+  gap: var(--space-lg);
 }
 
-.app-title {
+.application-item:last-child {
+  border-bottom: none;
+}
+
+.item-company-role {
   font-size: var(--font-size-sm);
-  font-weight: 500;
   color: var(--color-text-primary);
   flex: 1;
+  font-weight: 500;
 }
 
-.app-date {
-  font-size: var(--font-size-xs);
+.item-date {
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   white-space: nowrap;
-}
-
-.app-company {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
 }
