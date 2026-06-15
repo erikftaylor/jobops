@@ -60,6 +60,13 @@
   gap: var(--space-sm);
 }
 
+.card-actions-additional {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
 .card-cta-section {
   display: flex;
   gap: var(--space-sm);
@@ -231,4 +238,15 @@
 
 .close-loop-section .cta-button {
   width: 100%;
+}
+
+/* Error Message */
+.error-message {
+  padding: var(--space-md);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--border-radius);
+  color: var(--color-error, #ef4444);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-md);
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Job } from "@shared/types";
-import { GenerateButton } from "../../artifacts/index";
+import { GenerateButton, ResumePreviewModal } from "../../artifacts/index";
+import { useArtifacts } from "../../artifacts/hooks/useArtifacts";
 import "../styles/document-studio-panel.css";
 
 type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "applied" | "closed";
@@ -18,7 +19,10 @@ export default function DocumentStudioPanel({
   onMarkApplied,
   onOpenWorkspace,
 }: DocumentStudioPanelProps) {
-  const [hasResume, setHasResume] = useState(false);
+  const { artifact: resumeArtifact, error: resumeError, copyToClipboard, downloadPDF } = useArtifacts();
+  const [showResumePreview, setShowResumePreview] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   if (!selectedJob) {
     return (
@@ -41,6 +45,25 @@ export default function DocumentStudioPanel({
     currentState === "approved" ||
     currentState === "generated";
 
+  const handleCopyText = async () => {
+    if (resumeArtifact) {
+      await copyToClipboard(resumeArtifact.renderedText);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (resumeArtifact) {
+      setExportingPDF(true);
+      try {
+        await downloadPDF(selectedJob.id, resumeArtifact.id);
+      } finally {
+        setExportingPDF(false);
+      }
+    }
+  };
+
   return (
     <div className="document-studio-panel">
       <div className="panel-header">
@@ -61,7 +84,6 @@ export default function DocumentStudioPanel({
               <GenerateButton
                 jobId={selectedJob.id}
                 onArtifactCreated={() => {
-                  setHasResume(true);
                   if (currentState !== "generated") {
                     onStateChange("generated");
                   }
@@ -75,15 +97,33 @@ export default function DocumentStudioPanel({
             )}
           </div>
 
-          {/* Preview button - TODO: Wire to actual artifact preview in Phase 2 */}
-          {/* <div className="card-cta-section">
-            <button
-              className="action-link"
-              disabled={!hasResume}
-            >
-              Preview Resume
-            </button>
-          </div> */}
+          {resumeError && (
+            <div className="error-message">{resumeError}</div>
+          )}
+
+          {resumeArtifact && (
+            <div className="card-actions-additional">
+              <button
+                className="action-link"
+                onClick={() => setShowResumePreview(true)}
+              >
+                Preview Resume
+              </button>
+              <button
+                className="action-link"
+                onClick={handleCopyText}
+              >
+                {copyFeedback ? "✓ Copied!" : "Copy Text"}
+              </button>
+              <button
+                className="action-link"
+                onClick={handleDownloadPDF}
+                disabled={exportingPDF}
+              >
+                {exportingPDF ? "Downloading..." : "Download PDF"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Cover Letter Card */}
@@ -97,45 +137,7 @@ export default function DocumentStudioPanel({
             <button className="cta-button disabled" disabled>
               Generate Letter
             </button>
-            <p className="coming-soon">Coming in Phase 2</p>
-          </div>
-        </div>
-
-        {/* Export Section */}
-        <div className="export-section">
-          <h3>Export & Save</h3>
-
-          <div className="export-options">
-            <div className="export-option">
-              <label>PDF Export</label>
-              <button
-                className="export-button"
-                disabled={!hasResume}
-              >
-                Download PDF
-              </button>
-            </div>
-
-            <div className="export-option">
-              <label>Copy to Clipboard</label>
-              <button
-                className="export-button"
-                disabled={!hasResume}
-              >
-                Copy Text
-              </button>
-            </div>
-
-            <div className="export-option disabled">
-              <label>Google Drive</label>
-              <button
-                className="export-button"
-                disabled
-              >
-                Save to Drive
-              </button>
-              <p className="coming-soon">Coming soon</p>
-            </div>
+            <p className="coming-soon">Coming in Phase 3</p>
           </div>
         </div>
 
@@ -169,13 +171,17 @@ export default function DocumentStudioPanel({
         </div>
       </div>
 
-      {/* Resume Preview Modal - TODO: Wire this to actual artifact data */}
-      {/* {showResumePreview && selectedJob.artifacts?.resume && (
+      {/* Resume Preview Modal */}
+      {resumeArtifact && (
         <ResumePreviewModal
-          artifact={selectedJob.artifacts.resume}
+          isOpen={showResumePreview}
+          artifact={resumeArtifact}
+          jobId={selectedJob.id}
           onClose={() => setShowResumePreview(false)}
+          onCopy={handleCopyText}
+          onDownload={handleDownloadPDF}
         />
-      )} */}
+      )}
     </div>
   );
 }

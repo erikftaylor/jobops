@@ -15,12 +15,35 @@ const mockJob: Job = {
 
 // Mock the artifacts components
 vi.mock("../../../artifacts/index", () => ({
-  GenerateButton: () => <button>Generate Resume</button>,
-  ResumePreviewModal: () => <div>Resume Preview</div>,
+  GenerateButton: ({ onArtifactCreated }: any) => (
+    <button onClick={() => onArtifactCreated({ id: "artifact-1", renderedText: "Resume text" })}>
+      Generate Resume
+    </button>
+  ),
+  ResumePreviewModal: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="resume-preview-modal">
+        <div>Resume Preview</div>
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
+}));
+
+// Mock the useArtifacts hook
+vi.mock("../../../artifacts/hooks/useArtifacts", () => ({
+  useArtifacts: () => ({
+    artifact: null,
+    isGenerating: false,
+    error: null,
+    generateResume: vi.fn(),
+    getArtifact: vi.fn(),
+    downloadPDF: vi.fn(),
+    copyToClipboard: vi.fn(),
+  }),
 }));
 
 describe("DocumentStudioPanel", () => {
-  it("renders the Document Studio panel", () => {
+  it("renders the Document Studio panel with selected job", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -45,7 +68,7 @@ describe("DocumentStudioPanel", () => {
     expect(screen.getByText(/Select a job to generate/)).toBeInTheDocument();
   });
 
-  it("displays Resume card", () => {
+  it("displays Resume card with generate button when job is analyzed", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -56,6 +79,21 @@ describe("DocumentStudioPanel", () => {
 
     expect(screen.getByText("Resume")).toBeInTheDocument();
     expect(screen.getByText(/Tailored to emphasize/)).toBeInTheDocument();
+    expect(screen.getByText("Generate Resume")).toBeInTheDocument();
+  });
+
+  it("displays message to analyze job when job is in draft state", () => {
+    const draftJob: Job = { ...mockJob, state: "draft" };
+
+    render(
+      <DocumentStudioPanel
+        selectedJob={draftJob}
+        onStateChange={vi.fn()}
+        onMarkApplied={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Analyze the job first to generate a tailored resume")).toBeInTheDocument();
   });
 
   it("displays Cover Letter card with coming soon message", () => {
@@ -68,21 +106,7 @@ describe("DocumentStudioPanel", () => {
     );
 
     expect(screen.getByText("Cover Letter")).toBeInTheDocument();
-    expect(screen.getByText("Coming in Phase 2")).toBeInTheDocument();
-  });
-
-  it("displays Export & Save section", () => {
-    render(
-      <DocumentStudioPanel
-        selectedJob={mockJob}
-        onStateChange={vi.fn()}
-        onMarkApplied={vi.fn()}
-      />
-    );
-
-    expect(screen.getByText("Export & Save")).toBeInTheDocument();
-    expect(screen.getByText("PDF Export")).toBeInTheDocument();
-    expect(screen.getByText("Copy to Clipboard")).toBeInTheDocument();
+    expect(screen.getByText("Coming in Phase 3")).toBeInTheDocument();
   });
 
   it("displays Mark Applied section", () => {
@@ -116,7 +140,7 @@ describe("DocumentStudioPanel", () => {
   it("renders panel header", () => {
     render(
       <DocumentStudioPanel
-        selectedJob={undefined}
+        selectedJob={mockJob}
         onStateChange={vi.fn()}
         onMarkApplied={vi.fn()}
       />
