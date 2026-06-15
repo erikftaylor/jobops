@@ -1,6 +1,6 @@
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
-import { ResumeContent } from "../schemas/artifact.schema.js";
+import { ResumeContent, CoverLetterContent } from "../schemas/artifact.schema.js";
 import { PDFTemplateService } from "./pdf-template.service.js";
 
 /**
@@ -51,6 +51,45 @@ export class PDFExportService {
 
         // Render resume content with ATS-safe typography
         this.renderResumeToPDF(pdf, resumeContent);
+
+        pdf.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Generate PDF from cover letter artifact
+   * Returns Promise that resolves with PDF bytes
+   */
+  async generateCoverLetterPDF(
+    coverLetterContent: CoverLetterContent["coverLetter"]
+  ): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const pdf = new PDFDocument({
+          margin: 36,
+          size: "Letter",
+          bufferPages: true,
+        });
+
+        const stream = pdf.pipe(new PassThrough());
+        const chunks: Buffer[] = [];
+
+        stream.on("data", (chunk: Buffer) => {
+          chunks.push(chunk);
+        });
+
+        stream.on("end", () => {
+          resolve(Buffer.concat(chunks));
+        });
+
+        stream.on("error", (err: Error) => {
+          reject(err);
+        });
+
+        this.renderCoverLetterToPDF(pdf, coverLetterContent);
 
         pdf.end();
       } catch (error) {
@@ -133,6 +172,37 @@ export class PDFExportService {
         pdf.moveDown(0.15);
       });
     }
+  }
+
+  /**
+   * Render cover letter content to PDF with professional formatting
+   */
+  private renderCoverLetterToPDF(
+    pdf: PDFKit.PDFDocument,
+    coverLetter: CoverLetterContent["coverLetter"]
+  ): void {
+    const FONT_SIZE_BODY = 11;
+
+    // Greeting
+    pdf.fontSize(FONT_SIZE_BODY).font("Helvetica").text(coverLetter.greeting);
+    pdf.moveDown(0.2);
+
+    // Opening
+    pdf.fontSize(FONT_SIZE_BODY).text(coverLetter.opening);
+    pdf.moveDown(0.3);
+
+    // Body paragraphs
+    coverLetter.bodyParagraphs.forEach((paragraph) => {
+      pdf.fontSize(FONT_SIZE_BODY).text(paragraph);
+      pdf.moveDown(0.3);
+    });
+
+    // Closing
+    pdf.fontSize(FONT_SIZE_BODY).text(coverLetter.closing);
+    pdf.moveDown(0.3);
+
+    // Signature
+    pdf.fontSize(FONT_SIZE_BODY).text(coverLetter.signature);
   }
 
   /**

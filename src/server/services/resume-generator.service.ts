@@ -47,13 +47,14 @@ export class ResumeGeneratorService {
   ) {}
 
   /**
-   * Generate a resume artifact with retry logic
+   * Generate a resume or cover letter artifact with retry logic
    */
   async generateResume(
     jobId: string,
     careerProfile: CareerModel,
     jobDescription: string,
-    fitAnalysis: FitAnalysisResult
+    fitAnalysis: FitAnalysisResult,
+    artifactType: "resume" | "cover_letter" = "resume"
   ): Promise<GenerationResult> {
     // Validate career profile
     if (!careerProfile || !careerProfile.sections.experience?.length) {
@@ -107,14 +108,16 @@ export class ResumeGeneratorService {
         // Persist artifact
         const artifactInput: CreateArtifactInput = {
           jobId,
-          artifactType: "resume",
+          artifactType,
           careerDocVersionId: careerProfile.metadata.hash,
           promptVersion: 1,
           model: "claude-sonnet-4-20250514",
           jsonContent: validated,
           renderedText,
           positioning: validated.analysis.positioning,
-          title: `Resume - ${validated.analysis.positioning}`,
+          title: artifactType === "resume"
+            ? `Resume - ${validated.analysis.positioning}`
+            : `Cover Letter - ${validated.analysis.positioning}`,
         };
 
         const artifact = this.artifactService.create(artifactInput);

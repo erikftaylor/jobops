@@ -23,6 +23,7 @@ interface UseArtifactsReturn {
   isGenerating: boolean;
   error: string | null;
   generateResume: (jobId: string) => Promise<void>;
+  generateCoverLetter: (jobId: string) => Promise<void>;
   getArtifact: (jobId: string, artifactId: string) => Promise<JobArtifact | null>;
   downloadPDF: (jobId: string, artifactId: string) => Promise<void>;
   copyToClipboard: (text: string) => Promise<void>;
@@ -33,19 +34,19 @@ export function useArtifacts(): UseArtifactsReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generateResume = useCallback(async (jobId: string) => {
+  const generateArtifact = useCallback(async (jobId: string, artifactType: "resume" | "cover_letter" = "resume") => {
     setIsGenerating(true);
     setError(null);
     try {
       const response = await fetch(`/api/jobs/${jobId}/artifacts/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ artifactType: "resume" }),
+        body: JSON.stringify({ artifactType }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error?.message || "Failed to generate resume");
+        throw new Error(data.error?.message || `Failed to generate ${artifactType}`);
       }
 
       const data = await response.json();
@@ -53,11 +54,14 @@ export function useArtifacts(): UseArtifactsReturn {
     } catch (err: any) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
-      console.error("Resume generation error:", err);
+      console.error(`${artifactType} generation error:`, err);
     } finally {
       setIsGenerating(false);
     }
   }, []);
+
+  const generateResume = useCallback((jobId: string) => generateArtifact(jobId, "resume"), [generateArtifact]);
+  const generateCoverLetter = useCallback((jobId: string) => generateArtifact(jobId, "cover_letter"), [generateArtifact]);
 
   const getArtifact = useCallback(
     async (jobId: string, artifactId: string): Promise<JobArtifact | null> => {
@@ -119,6 +123,7 @@ export function useArtifacts(): UseArtifactsReturn {
     isGenerating,
     error,
     generateResume,
+    generateCoverLetter,
     getArtifact,
     downloadPDF,
     copyToClipboard,
