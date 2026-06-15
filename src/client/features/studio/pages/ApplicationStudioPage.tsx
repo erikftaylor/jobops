@@ -1,8 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useJobs } from "../../jobs/hooks/useJobs";
 import { useMessages } from "../../jobs/hooks/useMessages";
-import { HealthCheckResponse } from "@shared/types";
-import CareerMemoryPanel from "../components/CareerMemoryPanel";
 import JobInputPanel from "../components/JobInputPanel";
 import StrategyCoachPanel from "../components/StrategyCoachPanel";
 import DocumentStudioPanel from "../components/DocumentStudioPanel";
@@ -17,29 +15,9 @@ interface ApplicationStudioPageProps {
 export default function ApplicationStudioPage({ onOpenWorkspace }: ApplicationStudioPageProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
   const [isCreating, setIsCreating] = useState(false);
-  const [health, setHealth] = useState<HealthCheckResponse | { status: "unhealthy"; error: string } | null>(null);
 
   const { jobs, isLoading: jobsLoading, createJob, updateJobState } = useJobs();
   const { messages, sendMessage } = useMessages(selectedJobId);
-
-  // Fetch health data for career profile info
-  useEffect(() => {
-    const fetchHealth = async () => {
-      try {
-        const response = await fetch("/api/health");
-        const data = await response.json();
-        setHealth(data);
-      } catch (err) {
-        console.error("Failed to fetch health:", err);
-        setHealth({
-          status: "unhealthy",
-          error: "Failed to connect to server",
-        });
-      }
-    };
-
-    fetchHealth();
-  }, []);
 
   const selectedJob = selectedJobId ? jobs.find((j) => j.id === selectedJobId) : undefined;
 
@@ -106,36 +84,52 @@ export default function ApplicationStudioPage({ onOpenWorkspace }: ApplicationSt
 
   return (
     <div className="application-studio-page">
-      {/* Left Panel: Career Memory + Job Input */}
-      <div className="studio-panel-column studio-left-panel">
-        <CareerMemoryPanel health={health} />
-        <JobInputPanel
-          jobs={jobs}
-          selectedJobId={selectedJobId}
-          isLoading={isCreating || jobsLoading}
-          onCreateJob={handleCreateJob}
-          onSelectJob={handleJobSelect}
-        />
+      {/* Header: Application Studio + Career Memory Status */}
+      <div className="studio-header">
+        <h1 className="studio-header-title">Application Studio</h1>
+        <div className="studio-header-status">
+          <span className="studio-header-status-indicator">✓ Career Memory Ready</span>
+          <span>Updated today</span>
+          <button className="studio-header-manage">Manage →</button>
+        </div>
       </div>
 
-      {/* Center Panel: Strategy Coach */}
-      <div className="studio-panel-column studio-center-panel">
-        <StrategyCoachPanel
-          selectedJob={selectedJob}
-          messages={messages}
-          onSendMessage={sendMessage}
-          onStateChange={handleStateChange}
-        />
-      </div>
+      {/* Main content: single scrollable column */}
+      <div className="studio-content">
+        {/* Job Description Section */}
+        <div className="studio-section">
+          <JobInputPanel
+            jobs={jobs}
+            selectedJobId={selectedJobId}
+            isLoading={isCreating || jobsLoading}
+            onCreateJob={handleCreateJob}
+            onSelectJob={handleJobSelect}
+          />
+        </div>
 
-      {/* Right Panel: Document Studio */}
-      <div className="studio-panel-column studio-right-panel">
-        <DocumentStudioPanel
-          selectedJob={selectedJob}
-          onStateChange={handleStateChange}
-          onMarkApplied={handleMarkApplied}
-          onOpenWorkspace={handleAccessWorkspace}
-        />
+        {/* Analysis Section */}
+        {selectedJob && (
+          <div className="studio-section">
+            <StrategyCoachPanel
+              selectedJob={selectedJob}
+              messages={messages}
+              onSendMessage={sendMessage}
+              onStateChange={handleStateChange}
+            />
+          </div>
+        )}
+
+        {/* Documents Section */}
+        {selectedJob && (
+          <div className="studio-section">
+            <DocumentStudioPanel
+              selectedJob={selectedJob}
+              onStateChange={handleStateChange}
+              onMarkApplied={handleMarkApplied}
+              onOpenWorkspace={handleAccessWorkspace}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

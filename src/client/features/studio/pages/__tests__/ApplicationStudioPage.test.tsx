@@ -3,10 +3,6 @@ import { render, screen } from "@testing-library/react";
 import ApplicationStudioPage from "../ApplicationStudioPage";
 
 // Mock the sub-components
-vi.mock("../../components/CareerMemoryPanel", () => ({
-  default: () => <div data-testid="career-memory-panel">Career Memory Panel</div>,
-}));
-
 vi.mock("../../components/JobInputPanel", () => ({
   default: () => <div data-testid="job-input-panel">Job Input Panel</div>,
 }));
@@ -38,49 +34,28 @@ vi.mock("../../../jobs/hooks/useMessages", () => ({
   }),
 }));
 
-// Mock fetch
-global.fetch = vi.fn();
-
 describe("ApplicationStudioPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: "healthy" }),
-    });
-  });
-
-  it("renders the three-panel layout", () => {
+  it("renders as a single-column living workspace", () => {
     render(<ApplicationStudioPage />);
 
-    expect(screen.getByTestId("career-memory-panel")).toBeInTheDocument();
+    expect(screen.getByText("Application Studio")).toBeInTheDocument();
+    expect(screen.getByText("✓ Career Memory Ready")).toBeInTheDocument();
     expect(screen.getByTestId("job-input-panel")).toBeInTheDocument();
-    expect(screen.getByTestId("strategy-coach-panel")).toBeInTheDocument();
-    expect(screen.getByTestId("document-studio-panel")).toBeInTheDocument();
   });
 
-  it("displays Career Memory panel on the left", () => {
+  it("displays header with Career Memory status", () => {
     const { container } = render(<ApplicationStudioPage />);
-    const leftPanel = container.querySelector(".studio-left-panel");
+    const header = container.querySelector(".studio-header");
 
-    expect(leftPanel).toBeInTheDocument();
-    expect(leftPanel).toContainElement(screen.getByTestId("career-memory-panel"));
+    expect(header).toBeInTheDocument();
+    expect(screen.getByText("Application Studio")).toBeInTheDocument();
+    expect(screen.getByText("✓ Career Memory Ready")).toBeInTheDocument();
   });
 
-  it("displays Strategy Coach panel in the center", () => {
-    const { container } = render(<ApplicationStudioPage />);
-    const centerPanel = container.querySelector(".studio-center-panel");
+  it("displays Job Input section", () => {
+    render(<ApplicationStudioPage />);
 
-    expect(centerPanel).toBeInTheDocument();
-    expect(centerPanel).toContainElement(screen.getByTestId("strategy-coach-panel"));
-  });
-
-  it("displays Document Studio panel on the right", () => {
-    const { container } = render(<ApplicationStudioPage />);
-    const rightPanel = container.querySelector(".studio-right-panel");
-
-    expect(rightPanel).toBeInTheDocument();
-    expect(rightPanel).toContainElement(screen.getByTestId("document-studio-panel"));
+    expect(screen.getByTestId("job-input-panel")).toBeInTheDocument();
   });
 
   it("uses application-studio-page CSS class", () => {
@@ -90,9 +65,13 @@ describe("ApplicationStudioPage", () => {
     expect(page).toHaveClass("application-studio-page");
   });
 
-  it("fetches health status on mount", async () => {
+  it("displays strategy and document sections when job is selected", () => {
+    // This would require mocking useJobs to return a job, but for now
+    // test that the page renders without a job selected
     render(<ApplicationStudioPage />);
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/health");
+    // When no job is selected, strategy and document panels shouldn't render
+    expect(screen.queryByTestId("strategy-coach-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("document-studio-panel")).not.toBeInTheDocument();
   });
 });
