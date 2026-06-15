@@ -39,8 +39,8 @@ export default function StrategyCoachPanel({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatExpanded, setChatExpanded] = useState(false);
 
-  // Fetch analysis when job is selected
   useEffect(() => {
     if (!selectedJob) {
       setAnalysisData(null);
@@ -84,7 +84,6 @@ export default function StrategyCoachPanel({
       const data = await response.json();
       setAnalysisData(data);
 
-      // Update job state to analyzed
       if (selectedJob.state === "draft") {
         await onStateChange("analyzed");
       }
@@ -113,13 +112,10 @@ export default function StrategyCoachPanel({
   if (!selectedJob) {
     return (
       <div className="strategy-coach-panel empty">
-        <div className="panel-header">
-          <h2>Strategy Coach</h2>
-          <p className="panel-subtitle">Get personalized guidance</p>
-        </div>
-        <div className="empty-state">
-          <p>Select a job to analyze it and get strategic guidance.</p>
-        </div>
+        <h2 className="studio-section-title">Job Analysis</h2>
+        <p className="studio-section-description">
+          Select a job to analyze it and get tailored guidance.
+        </p>
       </div>
     );
   }
@@ -128,18 +124,14 @@ export default function StrategyCoachPanel({
 
   return (
     <div className="strategy-coach-panel">
-      <div className="panel-header">
-        <h2>Strategy Coach</h2>
-        <p className="panel-subtitle">Personalized guidance</p>
-      </div>
+      <h2 className="studio-section-title">Job Analysis</h2>
 
       <div className="strategy-content">
-        {/* Fit Analysis Section */}
         {!analysisData ? (
           <div className="analysis-prompt">
             {currentState === "draft" ? (
               <>
-                <p>Analyze this job to see your fit and get strategic guidance.</p>
+                <p>Ready to analyze? We'll assess your fit and identify the best way to approach this role.</p>
                 <button
                   className="cta-button primary"
                   onClick={handleAnalyzeJob}
@@ -156,95 +148,95 @@ export default function StrategyCoachPanel({
             )}
           </div>
         ) : (
-          <div className="analysis-results">
-            <div className="fit-score-card">
-              <div className="score-header">
-                <h3>Your Fit</h3>
-                <div className="score-badge">
-                  <span className="score-value">{analysisData.analysis.estimatedATSFit.score}</span>
-                  <span className="score-label">
-                    {analysisData.analysis.estimatedATSFit.label}
-                  </span>
+          <>
+            {/* Analysis Summary */}
+            <div className="analysis-summary">
+              <div className="summary-header">
+                <div className="fit-badge">
+                  <span className="fit-label">{analysisData.analysis.estimatedATSFit.label}</span>
+                  <span className="fit-score">{analysisData.analysis.estimatedATSFit.score}</span>
                 </div>
               </div>
-              <p className="score-explanation">
+
+              <p className="fit-explanation">
                 {analysisData.analysis.estimatedATSFit.explanation}
               </p>
-            </div>
 
-            {analysisData.analysis.recommendedAngle && (
-              <div className="strategy-section">
-                <h4>Recommended Positioning Angle</h4>
-                <p className="angle-text">
-                  {analysisData.analysis.recommendedAngle}
-                </p>
-              </div>
-            )}
-
-            {analysisData.analysis.topStrengths?.length > 0 && (
-              <div className="strategy-section">
-                <h4>Your Strengths for This Role</h4>
-                <ul className="strength-list">
-                  {analysisData.analysis.topStrengths.map((strength, i) => (
-                    <li key={i}>{strength}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {analysisData.analysis.remainingGaps?.length > 0 && (
-              <div className="strategy-section gaps">
-                <h4>Areas to Emphasize</h4>
-                <ul className="gap-list">
-                  {analysisData.analysis.remainingGaps.map((gap, i) => (
-                    <li key={i}>{gap}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="strategy-section">
-              <h4>Resume Strategy</h4>
-              <p>
-                Focus on demonstrating the strengths above. Lead with accomplishments
-                that directly address the job requirements.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Chat Area */}
-        {messages.length > 0 && (
-          <div className="chat-area">
-            <h4>Conversation</h4>
-            <div className="messages-list">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`message ${msg.role}`}>
-                  <p>{msg.content}</p>
+              {analysisData.analysis.topStrengths?.length > 0 && (
+                <div className="summary-section">
+                  <h4>What You Bring</h4>
+                  <ul className="strength-list">
+                    {analysisData.analysis.topStrengths.map((strength, i) => (
+                      <li key={i}>{strength}</li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              )}
 
-        {/* Input */}
-        {analysisData && (
-          <form className="message-input-form" onSubmit={handleSendMessage}>
-            <textarea
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Ask for strategy advice..."
-              rows={3}
-              disabled={sendingMessage}
-            />
-            <button
-              type="submit"
-              className="send-button"
-              disabled={sendingMessage || !messageInput.trim()}
-            >
-              {sendingMessage ? "Sending..." : "Ask"}
-            </button>
-          </form>
+              {analysisData.analysis.remainingGaps?.length > 0 && (
+                <div className="summary-section">
+                  <h4>What to Emphasize</h4>
+                  <ul className="gap-list">
+                    {analysisData.analysis.remainingGaps.map((gap, i) => (
+                      <li key={i}>{gap}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {analysisData.analysis.recommendedAngle && (
+                <div className="summary-section">
+                  <h4>Your Best Angle</h4>
+                  <p className="angle-text">
+                    {analysisData.analysis.recommendedAngle}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Collapsible Chat Section */}
+            <div className="chat-section">
+              <button
+                className="chat-toggle"
+                onClick={() => setChatExpanded(!chatExpanded)}
+                aria-expanded={chatExpanded}
+              >
+                <span className="toggle-label">Ask Strategy Coach</span>
+                <span className="toggle-icon">{chatExpanded ? "−" : "+"}</span>
+              </button>
+
+              {chatExpanded && (
+                <div className="chat-content">
+                  {messages.length > 0 && (
+                    <div className="messages-list">
+                      {messages.map((msg) => (
+                        <div key={msg.id} className={`message ${msg.role}`}>
+                          <p>{msg.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <form className="message-input-form" onSubmit={handleSendMessage}>
+                    <textarea
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      placeholder="Ask for strategy advice..."
+                      rows={2}
+                      disabled={sendingMessage}
+                    />
+                    <button
+                      type="submit"
+                      className="send-button"
+                      disabled={sendingMessage || !messageInput.trim()}
+                    >
+                      {sendingMessage ? "Sending..." : "Send"}
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
