@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import HealthStatus from "./components/HealthStatus";
-import JobsPage from "./features/jobs/pages/JobsPage";
+import ApplicationStudioPage from "./features/studio/pages/ApplicationStudioPage";
 import WorkspacePage from "./features/workspace/pages/WorkspacePage";
 import SettingsModal from "./features/settings/components/SettingsModal";
 
@@ -10,13 +10,13 @@ interface WorkspaceViewState {
   jobId: string;
 }
 
-type AppViewState = { type: "jobs" } | WorkspaceViewState;
+type AppViewState = { type: "studio" } | WorkspaceViewState;
 
 function App() {
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<AppViewState>({ type: "jobs" });
+  const [currentView, setCurrentView] = useState<AppViewState>({ type: "studio" });
 
   useEffect(() => {
     const fetchHealth = async () => {
@@ -42,18 +42,18 @@ function App() {
     setCurrentView({ type: "workspace", jobId });
   };
 
-  const handleBackToJobs = () => {
-    setCurrentView({ type: "jobs" });
+  const handleBackToStudio = () => {
+    setCurrentView({ type: "studio" });
   };
 
   return (
     <div className="app">
-      {currentView.type === "jobs" ? (
-        <JobsPage onOpenWorkspace={handleOpenWorkspace} />
+      {currentView.type === "studio" ? (
+        <ApplicationStudioPage onOpenWorkspace={handleOpenWorkspace} />
       ) : (
         <WorkspacePage
           jobId={currentView.jobId}
-          onBack={handleBackToJobs}
+          onBack={handleBackToStudio}
         />
       )}
 
