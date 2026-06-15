@@ -4,6 +4,8 @@ import { getClaudeService } from "../services/claude.service.js";
 import { createArtifactService } from "../services/artifact.service.js";
 import { createResumePromptBuilderService } from "../services/resume-prompt-builder.service.js";
 import { createResumeGeneratorService } from "../services/resume-generator.service.js";
+import { CoverLetterPromptBuilderService } from "../services/cover-letter-prompt-builder.service.js";
+import { CoverLetterGeneratorService } from "../services/cover-letter-generator.service.js";
 import { createJobService } from "../services/job.service.js";
 import { createCareerModelService } from "../services/career-model.service.js";
 import { createChangeGraphService } from "../services/change-graph.service.js";
@@ -17,6 +19,7 @@ const router = Router();
 let services: {
   artifactService: ReturnType<typeof createArtifactService>;
   resumeGeneratorService: ReturnType<typeof createResumeGeneratorService>;
+  coverLetterGeneratorService: CoverLetterGeneratorService;
   jobService: ReturnType<typeof createJobService>;
   careerModelService: ReturnType<typeof createCareerModelService>;
   fitAnalyzerService: FitAnalyzerService;
@@ -36,18 +39,28 @@ export function initializeJobArtifactServices() {
   const careerModelService = createCareerModelService(db, changeGraphService);
   const careerDocService = createCareerDocService();
   const artifactService = createArtifactService();
-  const promptBuilder = createResumePromptBuilderService();
+
+  const resumePromptBuilder = createResumePromptBuilderService();
   const resumeGeneratorService = createResumeGeneratorService(
     claudeService,
-    promptBuilder,
+    resumePromptBuilder,
     artifactService
   );
+
+  const coverLetterPromptBuilder = new CoverLetterPromptBuilderService();
+  const coverLetterGeneratorService = new CoverLetterGeneratorService(
+    claudeService,
+    coverLetterPromptBuilder,
+    artifactService
+  );
+
   const fitAnalyzerService = new FitAnalyzerService();
   const pdfExportService = createPDFExportService();
 
   services = {
     artifactService,
     resumeGeneratorService,
+    coverLetterGeneratorService,
     jobService,
     careerModelService,
     fitAnalyzerService,
@@ -120,18 +133,27 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
     const fitAnalysis = svc.fitAnalyzerService.analyze(careerModel, job.description);
 
     // Generate artifact (resume or cover letter)
-    const result = await svc.resumeGeneratorService.generateResume(
-      jobId,
-      careerModel,
-      job.description,
-      {
-        positioning: fitAnalysis.recommendedPositioningAngle || "Strong Candidate",
-        strengths: fitAnalysis.strongMatches || [],
-        gaps: fitAnalysis.experienceGaps.map((g) => g.requirement) || [],
-        score: fitAnalysis.overallFit || 0,
-      },
-      artifactType
-    );
+    const fitAnalysisPayload = {
+      positioning: fitAnalysis.recommendedPositioningAngle || "Strong Candidate",
+      strengths: fitAnalysis.strongMatches || [],
+      gaps: fitAnalysis.experienceGaps.map((g) => g.requirement) || [],
+      score: fitAnalysis.overallFit || 0,
+    };
+
+    const result = artifactType === "cover_letter"
+      ? await svc.coverLetterGeneratorService.generateCoverLetter(
+          jobId,
+          careerModel,
+          job.description,
+          fitAnalysisPayload
+        )
+      : await svc.resumeGeneratorService.generateResume(
+          jobId,
+          careerModel,
+          job.description,
+          fitAnalysisPayload,
+          "resume"
+        );
 
     if (!result.success) {
       return res.status(500).json({
@@ -149,13 +171,17 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
     return res.json({
       status: 200,
       data: {
-        artifactId: result.artifact!.id,
+        id: result.artifact!.id,
         jobId: result.artifact!.jobId,
         artifactType: result.artifact!.artifactType,
         version: result.artifact!.version,
         positioning: result.artifact!.positioning,
+        title: result.artifact!.title,
         status: result.artifact!.status,
+        renderedText: result.artifact!.renderedText,
+        jsonContent: result.artifact!.jsonContent,
         createdAt: result.artifact!.createdAt,
+        updatedAt: result.artifact!.updatedAt,
       },
     });
   } catch (error: any) {
@@ -297,7 +323,15 @@ router.post("/:jobId/artifacts/:artifactId/pdf", async (req: Request, res: Respo
     // This ensures ATS-safe structure: single column, standard typography, no graphics
     let pdfBytes: Buffer;
     try {
-      pdfBytes = await svc.pdfExportService.generateResumePDF(artifact.jsonContent.resume);
+      if (artifact.artifactType === "cover_letter") {
+        const coverLetterContent = artifact.jsonContent as any;
+        pdfBytes = await svc.pdfExportService.generateCoverLetterPDF(
+          coverLetterContent.coverLetter
+        );
+      } else {
+        const resumeContent = artifact.jsonContent as any;
+        pdfBytes = await svc.pdfExportService.generateResumePDF(resumeContent.resume);
+      }
 
       if (!pdfBytes || pdfBytes.length === 0) {
         throw new Error("PDF generation produced empty output");
@@ -319,10 +353,11 @@ router.post("/:jobId/artifacts/:artifactId/pdf", async (req: Request, res: Respo
 
     // Set response headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="resume_v${artifact.version}.pdf"`
-    );
+    const filename =
+      artifact.artifactType === "cover_letter"
+        ? `cover_letter_v${artifact.version}.pdf`
+        : `resume_v${artifact.version}.pdf`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Length", pdfBytes.length);
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 

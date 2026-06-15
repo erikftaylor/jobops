@@ -72,9 +72,31 @@ export default function ApplicationStudioPage({ onOpenWorkspace }: ApplicationSt
     setSelectedJobId(jobId);
   }, []);
 
-  const handleMarkApplied = useCallback(async () => {
-    await handleStateChange("applied");
-  }, [handleStateChange]);
+  const handleMarkApplied = useCallback(
+    async (payload: {
+      resumeArtifactId?: string;
+      coverLetterArtifactId?: string;
+      sourceUrl?: string;
+      notes?: string;
+    }) => {
+      if (!selectedJobId) return;
+      try {
+        const response = await fetch(`/api/jobs/${selectedJobId}/mark-applied`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to mark job as applied");
+        }
+        await response.json();
+        await updateJobState(selectedJobId, "applied");
+      } catch (err) {
+        console.error("Failed to mark applied:", err);
+      }
+    },
+    [selectedJobId, updateJobState]
+  );
 
   const handleAccessWorkspace = useCallback(() => {
     if (selectedJobId && onOpenWorkspace) {

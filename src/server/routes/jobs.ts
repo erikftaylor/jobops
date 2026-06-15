@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { getDatabase } from "../db/database.js";
 import { createJobService } from "../services/job.service.js";
 import { createMessageService } from "../services/message.service.js";
 import {
@@ -56,6 +57,38 @@ router.post("/", (req: Request, res: Response) => {
         message: (error as Error).message,
       });
     }
+  }
+});
+
+// GET /api/jobs/applications/recent - Get recent applied jobs
+router.get("/applications/recent", (_req: Request, res: Response) => {
+  try {
+    const db = getDatabase().getConnection();
+    const stmt = db.prepare(`
+      SELECT id, title, company, state, applied_at, updated_at
+      FROM jobs
+      WHERE state = 'applied'
+      ORDER BY applied_at DESC
+      LIMIT 10
+    `);
+    const jobs = stmt.all() as any[];
+
+    res.json({
+      jobs: jobs.map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        state: job.state,
+        applied_at: job.applied_at,
+        updated_at: job.updated_at,
+      })),
+      total: jobs.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: "SERVER_ERROR",
+      message: (error as Error).message,
+    });
   }
 });
 
@@ -245,6 +278,38 @@ router.post("/:id/messages", (req: Request, res: Response) => {
     if (error instanceof ZodError) {
       handleZodError(res, error);
     } else if ((error as Error).message.includes("not found")) {
+      res.status(404).json({
+        code: "NOT_FOUND",
+        message: (error as Error).message,
+      });
+    } else {
+      res.status(500).json({
+        code: "SERVER_ERROR",
+        message: (error as Error).message,
+      });
+    }
+  }
+});
+
+// POST /api/jobs/:id/mark-applied - Mark job as applied with tracking data
+router.post("/:id/mark-applied", (req: Request, res: Response) => {
+  try {
+    const { resumeArtifactId, coverLetterArtifactId, sourceUrl, notes } = req.body;
+    const job = jobService.markApplied(req.params.id, {
+      resumeArtifactId,
+      coverLetterArtifactId,
+      sourceUrl,
+      notes,
+    });
+
+    res.json({
+      id: job.id,
+      state: job.state,
+      applied_at: (job as any).applied_at,
+      updated_at: job.updated_at,
+    });
+  } catch (error) {
+    if ((error as Error).message.includes("not found")) {
       res.status(404).json({
         code: "NOT_FOUND",
         message: (error as Error).message,

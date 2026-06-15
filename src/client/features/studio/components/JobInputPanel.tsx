@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Job } from "@shared/types";
 import NewJobForm from "../../jobs/components/NewJobForm";
+import RecentApplicationsPanel from "./RecentApplicationsPanel";
 import "../styles/job-input-panel.css";
 
 interface JobInputPanelProps {
@@ -124,6 +125,11 @@ export default function JobInputPanel({
           </div>
         </div>
       )}
+
+      <RecentApplicationsPanel
+        onSelectJob={onSelectJob}
+        selectedJobId={selectedJobId}
+      />
     </div>
   );
 }

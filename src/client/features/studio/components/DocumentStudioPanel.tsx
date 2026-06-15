@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Job } from "@shared/types";
 import { GenerateButton, ResumePreviewModal } from "../../artifacts/index";
 import { useArtifacts } from "../../artifacts/hooks/useArtifacts";
@@ -9,7 +9,12 @@ type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "
 interface DocumentStudioPanelProps {
   selectedJob?: Job;
   onStateChange: (newState: JobState) => Promise<void>;
-  onMarkApplied: () => Promise<void>;
+  onMarkApplied: (payload: {
+    resumeArtifactId?: string;
+    coverLetterArtifactId?: string;
+    sourceUrl?: string;
+    notes?: string;
+  }) => Promise<void>;
   onOpenWorkspace?: () => void;
 }
 
@@ -25,9 +30,22 @@ export default function DocumentStudioPanel({
   const [exportingPDF, setExportingPDF] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [applyingStatus, setApplyingStatus] = useState(false);
+  const [resumeArtifactId, setResumeArtifactId] = useState<string | undefined>();
+  const [coverLetterArtifactId, setCoverLetterArtifactId] = useState<string | undefined>();
 
   // Determine if current artifact matches selected type
   const displayedArtifact = currentArtifact?.artifactType === artifactType ? currentArtifact : null;
+
+  // Track artifact IDs when they're created
+  useEffect(() => {
+    if (currentArtifact) {
+      if (currentArtifact.artifactType === "resume") {
+        setResumeArtifactId(currentArtifact.id);
+      } else if (currentArtifact.artifactType === "cover_letter") {
+        setCoverLetterArtifactId(currentArtifact.id);
+      }
+    }
+  }, [currentArtifact]);
 
   const handleCopyText = async () => {
     if (displayedArtifact) {
@@ -52,10 +70,10 @@ export default function DocumentStudioPanel({
     setApplyingStatus(true);
     try {
       if (selectedJob) {
-        // Update job state to applied
-        await onStateChange("applied");
-        // Notify parent
-        await onMarkApplied();
+        await onMarkApplied({
+          resumeArtifactId,
+          coverLetterArtifactId,
+        });
       }
     } catch (err) {
       console.error("Failed to mark applied:", err);
@@ -104,8 +122,9 @@ export default function DocumentStudioPanel({
             {canGenerate && (
               <GenerateButton
                 jobId={selectedJob.id}
-                onArtifactCreated={() => {
+                onArtifactCreated={(artifact: any) => {
                   setArtifactType("resume");
+                  setResumeArtifactId(artifact.id);
                   if (currentState !== "generated") {
                     onStateChange("generated");
                   }
@@ -163,7 +182,14 @@ export default function DocumentStudioPanel({
             {canGenerate && (
               <button
                 className="cta-button primary"
-                onClick={() => generateCoverLetter(selectedJob.id)}
+                onClick={async () => {
+                  try {
+                    await generateCoverLetter(selectedJob.id);
+                    setArtifactType("cover_letter");
+                  } catch (err) {
+                    console.error("Cover letter generation failed:", err);
+                  }
+                }}
               >
                 Generate Cover Letter
               </button>

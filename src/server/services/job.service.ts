@@ -155,6 +155,51 @@ export class JobService {
     return this.getJob(id)!;
   }
 
+  markApplied(
+    id: string,
+    options?: {
+      resumeArtifactId?: string;
+      coverLetterArtifactId?: string;
+      sourceUrl?: string;
+      notes?: string;
+    }
+  ): JobRecord {
+    const job = this.getJob(id);
+    if (!job) {
+      throw new Error(`Job ${id} not found`);
+    }
+
+    const db = getDatabase().getConnection();
+    const now = new Date().toISOString();
+
+    const stmt = db.prepare(`
+      UPDATE jobs SET
+        state = ?,
+        application_status = ?,
+        applied_at = ?,
+        resume_artifact_id = ?,
+        cover_letter_artifact_id = ?,
+        application_source_url = ?,
+        application_notes = ?,
+        updated_at = ?
+      WHERE id = ?
+    `);
+
+    stmt.run(
+      "applied",
+      "applied",
+      now,
+      options?.resumeArtifactId || null,
+      options?.coverLetterArtifactId || null,
+      options?.sourceUrl || null,
+      options?.notes || job.notes || null,
+      now,
+      id
+    );
+
+    return this.getJob(id)!;
+  }
+
   deleteJob(id: string): boolean {
     const db = getDatabase().getConnection();
     const stmt = db.prepare(`DELETE FROM jobs WHERE id = ?`);

@@ -38,6 +38,23 @@ export const ResumeContentSchema = z.object({
 
 export type ResumeContent = z.infer<typeof ResumeContentSchema>;
 
+export const CoverLetterContentSchema = z.object({
+  analysis: z.object({
+    positioning: z.string(),
+    keyThemes: z.array(z.string()),
+    companyCultureFit: z.string(),
+  }),
+  coverLetter: z.object({
+    greeting: z.string(),
+    opening: z.string(),
+    bodyParagraphs: z.array(z.string()),
+    closing: z.string(),
+    signature: z.string(),
+  }),
+});
+
+export type CoverLetterContent = z.infer<typeof CoverLetterContentSchema>;
+
 export const ArtifactSchema = z.object({
   id: z.string(),
   jobId: z.string(),
@@ -48,7 +65,7 @@ export const ArtifactSchema = z.object({
   careerDocVersionId: z.string(),
   promptVersion: z.number().int().positive(),
   model: z.string(),
-  jsonContent: ResumeContentSchema,
+  jsonContent: z.union([ResumeContentSchema, CoverLetterContentSchema]),
   renderedText: z.string(),
   status: ArtifactStatusSchema,
   isPreferred: z.boolean().default(false),
@@ -64,7 +81,7 @@ export const CreateArtifactSchema = z.object({
   careerDocVersionId: z.string(),
   promptVersion: z.number().int().positive(),
   model: z.string(),
-  jsonContent: ResumeContentSchema,
+  jsonContent: z.union([ResumeContentSchema, CoverLetterContentSchema]),
   renderedText: z.string(),
   positioning: z.string().optional(),
   title: z.string().optional(),
