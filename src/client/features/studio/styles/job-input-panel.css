@@ -1,194 +1,37 @@
 .job-input-panel {
   display: flex;
   flex-direction: column;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  overflow: hidden;
+  gap: var(--space-lg);
 }
 
-.job-input-content {
-  flex: 1;
-  padding: var(--space-lg);
-  overflow-y: auto;
-  position: relative;
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--space-xl) var(--space-lg);
-}
-
-.empty-state p {
-  margin: 0 0 var(--space-md) 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.job-detail-card {
-  padding: var(--space-lg);
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  margin-bottom: var(--space-lg);
-}
-
-.job-header {
-  margin-bottom: var(--space-md);
-}
-
-.job-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: var(--color-text-primary);
-}
-
-.job-header .company {
-  margin: var(--space-xs) 0 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.job-meta {
-  margin-bottom: var(--space-md);
-}
-
-.job-url {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-}
-
-.job-url:hover {
-  text-decoration: underline;
-}
-
-.job-description {
-  margin-bottom: var(--space-md);
-}
-
-.job-description h4 {
-  margin: 0 0 var(--space-sm) 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.description-preview {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.job-actions {
-  display: flex;
-  gap: var(--space-md);
-}
-
-.action-link {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  font-weight: 500;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.action-link:hover {
-  color: var(--color-primary-dark);
-}
-
-.job-form-overlay {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--border-radius);
-  padding: var(--space-lg);
-  z-index: 10;
-}
-
-.overlay-close {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.job-list-section {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-md);
-}
-
-.list-header h3 {
-  margin: 0;
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-}
-
-.list-header .count {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  background-color: var(--color-bg);
-  padding: 2px 8px;
-  border-radius: 20px;
-}
-
-.job-list {
+.saved-jobs-selector {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
 }
 
-.job-list-item {
-  padding: var(--space-md);
-  background-color: var(--color-bg);
+.selector-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.job-selector {
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  text-align: left;
+  border-radius: 4px;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: var(--font-size-sm);
 }
 
-.job-list-item:hover {
-  border-color: var(--color-primary);
-  background-color: var(--color-bg-hover);
-}
-
-.job-list-item.active {
-  background-color: var(--color-primary);
-  color: white;
+.job-selector:hover {
   border-color: var(--color-primary);
 }
 
-.list-item-title {
-  font-weight: 600;
-  margin-bottom: var(--space-xs);
-}
-
-.list-item-company {
-  font-size: var(--font-size-sm);
-  opacity: 0.8;
+.job-selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
 }

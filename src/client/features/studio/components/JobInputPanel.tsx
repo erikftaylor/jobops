@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { Job } from "@shared/types";
 import NewJobForm from "../../jobs/components/NewJobForm";
-import RecentApplicationsPanel from "./RecentApplicationsPanel";
 import "../styles/job-input-panel.css";
 
 interface JobInputPanelProps {
@@ -19,117 +17,45 @@ export default function JobInputPanel({
   onCreateJob,
   onSelectJob,
 }: JobInputPanelProps) {
-  const [showForm, setShowForm] = useState(false);
-  const selectedJob = selectedJobId ? jobs.find((j) => j.id === selectedJobId) : undefined;
-
   const handleCreateJob = async (data: any) => {
     await onCreateJob(data);
-    setShowForm(false);
   };
 
   return (
     <div className="job-input-panel">
-      <div className="panel-header">
-        <h2>Job Description</h2>
-        <p className="panel-subtitle">One job at a time</p>
-      </div>
+      <h2 className="studio-section-title">Job Description</h2>
+      <p className="studio-section-description">
+        Paste a job description to generate tailored application materials.
+      </p>
 
-      <div className="job-input-content">
-        {!selectedJob ? (
-          <div className="empty-state">
-            <p>No job selected. Add a new job or select one from below.</p>
-            <button
-              className="cta-button primary"
-              onClick={() => setShowForm(true)}
-              disabled={isLoading}
-            >
-              + Add Job
-            </button>
-          </div>
-        ) : (
-          <div className="job-detail-card">
-            <div className="job-header">
-              <h3>{selectedJob.title || "Untitled Position"}</h3>
-              {selectedJob.company && <p className="company">{selectedJob.company}</p>}
-            </div>
+      {/* Job Form (always visible) */}
+      <NewJobForm
+        onSubmit={handleCreateJob}
+        isLoading={isLoading}
+      />
 
-            <div className="job-meta">
-              {selectedJob.url && (
-                <a href={selectedJob.url} target="_blank" rel="noopener noreferrer" className="job-url">
-                  View Posting →
-                </a>
-              )}
-            </div>
-
-            {selectedJob.description && (
-              <div className="job-description">
-                <h4>Job Description</h4>
-                <div className="description-preview">
-                  {selectedJob.description.substring(0, 400)}
-                  {selectedJob.description.length > 400 && "..."}
-                </div>
-              </div>
-            )}
-
-            <div className="job-actions">
-              <button
-                className="action-link"
-                onClick={() => setShowForm(true)}
-              >
-                Edit Job
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showForm && (
-          <div className="job-form-overlay">
-            <NewJobForm
-              onSubmit={handleCreateJob}
-              isLoading={isLoading}
-            />
-            <button
-              className="overlay-close"
-              onClick={() => setShowForm(false)}
-              aria-label="Close form"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-      </div>
-
+      {/* Recently viewed job selector (compact) */}
       {jobs.length > 0 && (
-        <div className="job-list-section">
-          <div className="list-header">
-            <h3>Saved Jobs</h3>
-            <span className="count">{jobs.length}</span>
-          </div>
-          <div className="job-list">
+        <div className="saved-jobs-selector">
+          <label className="selector-label">or select from saved jobs</label>
+          <select
+            className="job-selector"
+            value={selectedJobId || ""}
+            onChange={(e) => {
+              if (e.target.value) {
+                onSelectJob(e.target.value);
+              }
+            }}
+          >
+            <option value="">Choose a saved job...</option>
             {jobs.map((job) => (
-              <button
-                key={job.id}
-                className={`job-list-item ${selectedJobId === job.id ? "active" : ""}`}
-                onClick={() => onSelectJob(job.id)}
-              >
-                <div className="list-item-title">
-                  {job.title || "Untitled"}
-                </div>
-                {job.company && (
-                  <div className="list-item-company">
-                    {job.company}
-                  </div>
-                )}
-              </button>
+              <option key={job.id} value={job.id}>
+                {job.title || "Untitled"} {job.company && `— ${job.company}`}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       )}
-
-      <RecentApplicationsPanel
-        onSelectJob={onSelectJob}
-        selectedJobId={selectedJobId}
-      />
     </div>
   );
 }

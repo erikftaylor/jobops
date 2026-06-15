@@ -4,6 +4,7 @@ import { useMessages } from "../../jobs/hooks/useMessages";
 import JobInputPanel from "../components/JobInputPanel";
 import StrategyCoachPanel from "../components/StrategyCoachPanel";
 import DocumentStudioPanel from "../components/DocumentStudioPanel";
+import RecentApplicationsPanel from "../components/RecentApplicationsPanel";
 import "../styles/application-studio.css";
 
 type JobState = "draft" | "analyzed" | "refining" | "approved" | "generated" | "applied" | "closed";
@@ -130,6 +131,14 @@ export default function ApplicationStudioPage({ onOpenWorkspace }: ApplicationSt
             />
           </div>
         )}
+
+        {/* Recent Applications Section */}
+        <div className="studio-section">
+          <RecentApplicationsPanel
+            onSelectJob={handleJobSelect}
+            selectedJobId={selectedJobId}
+          />
+        </div>
       </div>
     </div>
   );
