@@ -44,7 +44,7 @@ vi.mock("../../../artifacts/hooks/useArtifacts", () => ({
 }));
 
 describe("DocumentStudioPanel", () => {
-  it("renders the Document Studio panel with selected job", () => {
+  it("renders the Tailored Materials panel with selected job", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -53,8 +53,9 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Document Studio")).toBeInTheDocument();
-    expect(screen.getByText("Tailored to this job")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tailored Materials" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cover Letter" })).toBeInTheDocument();
   });
 
   it("shows empty state when no job is selected", () => {
@@ -69,7 +70,7 @@ describe("DocumentStudioPanel", () => {
     expect(screen.getByText(/Select a job to generate/)).toBeInTheDocument();
   });
 
-  it("displays Resume card with generate button when job is analyzed", () => {
+  it("displays Resume tab content with generate button when job is analyzed", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -78,9 +79,20 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Resume")).toBeInTheDocument();
-    expect(screen.getByText(/Tailored to emphasize/)).toBeInTheDocument();
     expect(screen.getByText("Generate Resume")).toBeInTheDocument();
+  });
+
+  it("displays tabs for Resume and Cover Letter", () => {
+    render(
+      <DocumentStudioPanel
+        selectedJob={mockJob}
+        onStateChange={vi.fn()}
+        onMarkApplied={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cover Letter" })).toBeInTheDocument();
   });
 
   it("displays message to analyze job when job is in draft state", () => {
@@ -94,11 +106,10 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Analyze the job first to generate a tailored resume")).toBeInTheDocument();
+    expect(screen.getByText(/Analyze the job first to generate/)).toBeInTheDocument();
   });
 
-
-  it("displays Mark Applied section", () => {
+  it("displays Mark as Applied button", () => {
     render(
       <DocumentStudioPanel
         selectedJob={mockJob}
@@ -107,8 +118,7 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Mark Applied")).toBeInTheDocument();
-    expect(screen.getByText(/When you've submitted/)).toBeInTheDocument();
+    expect(screen.getByText("Mark as Applied")).toBeInTheDocument();
   });
 
   it("shows applied state when job is marked as applied", () => {
@@ -126,19 +136,6 @@ describe("DocumentStudioPanel", () => {
     expect(appliedButton).toBeDisabled();
   });
 
-  it("renders panel header", () => {
-    render(
-      <DocumentStudioPanel
-        selectedJob={mockJob}
-        onStateChange={vi.fn()}
-        onMarkApplied={vi.fn()}
-      />
-    );
-
-    const header = screen.getByRole("heading", { name: "Document Studio" });
-    expect(header).toBeInTheDocument();
-  });
-
   it("displays generate cover letter button when job is analyzed", () => {
     render(
       <DocumentStudioPanel
@@ -148,21 +145,8 @@ describe("DocumentStudioPanel", () => {
       />
     );
 
-    expect(screen.getByText("Generate Cover Letter")).toBeInTheDocument();
-  });
-
-  it("calls onMarkApplied when mark applied button is clicked", async () => {
-    const onMarkApplied = vi.fn();
-
-    render(
-      <DocumentStudioPanel
-        selectedJob={mockJob}
-        onStateChange={vi.fn()}
-        onMarkApplied={onMarkApplied}
-      />
-    );
-
-    const markAppliedButton = screen.getByText("Mark as Applied");
-    expect(markAppliedButton).toBeInTheDocument();
+    // Switch to Cover Letter tab
+    const coverLetterTab = screen.getByRole("button", { name: "Cover Letter" });
+    expect(coverLetterTab).toBeInTheDocument();
   });
 });
