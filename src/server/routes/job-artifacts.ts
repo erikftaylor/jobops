@@ -8,8 +8,8 @@ import { createJobService } from "../services/job.service.js";
 import { createCareerModelService } from "../services/career-model.service.js";
 import { createChangeGraphService } from "../services/change-graph.service.js";
 import { FitAnalyzerService } from "../services/fit-analyzer.service.js";
-import PDFDocument from "pdfkit";
-import { PassThrough } from "stream";
+import { createPDFExportService } from "../services/pdf-export.service.js";
+import { createCareerDocService } from "../services/career-doc.service.js";
 
 const router = Router();
 
@@ -20,6 +20,8 @@ let services: {
   jobService: ReturnType<typeof createJobService>;
   careerModelService: ReturnType<typeof createCareerModelService>;
   fitAnalyzerService: FitAnalyzerService;
+  pdfExportService: ReturnType<typeof createPDFExportService>;
+  careerDocService: ReturnType<typeof createCareerDocService>;
 } | null = null;
 
 /**
@@ -32,6 +34,7 @@ export function initializeJobArtifactServices() {
   const jobService = createJobService();
   const changeGraphService = createChangeGraphService(db);
   const careerModelService = createCareerModelService(db, changeGraphService);
+  const careerDocService = createCareerDocService();
   const artifactService = createArtifactService();
   const promptBuilder = createResumePromptBuilderService();
   const resumeGeneratorService = createResumeGeneratorService(
@@ -40,6 +43,7 @@ export function initializeJobArtifactServices() {
     artifactService
   );
   const fitAnalyzerService = new FitAnalyzerService();
+  const pdfExportService = createPDFExportService();
 
   services = {
     artifactService,
@@ -47,6 +51,8 @@ export function initializeJobArtifactServices() {
     jobService,
     careerModelService,
     fitAnalyzerService,
+    pdfExportService,
+    careerDocService,
   };
 }
 
@@ -77,8 +83,9 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
       return res.status(400).json({
         status: 400,
         error: {
-          code: "UNSUPPORTED_TYPE",
-          message: "Phase 1 only supports resume generation",
+          code: "UNSUPPORTED_ARTIFACT_TYPE",
+          message: "Only resume generation is supported in Phase 1. Cover letters coming in Phase 2.",
+          details: { requestedType: artifactType },
         },
       });
     }
@@ -91,6 +98,7 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
         error: {
           code: "JOB_NOT_FOUND",
           message: `Job ${jobId} not found`,
+          details: { jobId },
         },
       });
     }
@@ -101,8 +109,9 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
       return res.status(400).json({
         status: 400,
         error: {
-          code: "INVALID_PROFILE",
-          message: "Career profile incomplete. Must have at least one experience entry.",
+          code: "CAREER_PROFILE_INCOMPLETE",
+          message: "Career profile must have at least one experience entry to generate resume",
+          details: { hasProfile: !!careerModel, experienceCount: careerModel?.sections.experience?.length || 0 },
         },
       });
     }
@@ -126,7 +135,13 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
     if (!result.success) {
       return res.status(500).json({
         status: 500,
-        error: result.error,
+        error: {
+          code: result.error?.code || "GENERATION_FAILED",
+          message: result.error?.message || "Resume generation failed",
+          details: {
+            attempt: result.error?.attempt,
+          },
+        },
       });
     }
 
@@ -148,7 +163,10 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
       status: 500,
       error: {
         code: "GENERATION_ERROR",
-        message: error.message || "Failed to generate resume",
+        message: "Unexpected error during resume generation",
+        details: {
+          reason: error.message || "Unknown error",
+        },
       },
     });
   }
@@ -156,7 +174,7 @@ router.post("/:jobId/artifacts/generate", async (req: Request, res: Response) =>
 
 /**
  * GET /api/jobs/:jobId/artifacts/:artifactId
- * Get a specific artifact
+ * Get a specific artifact with stale status
  */
 router.get("/:jobId/artifacts/:artifactId", (req: Request, res: Response) => {
   try {
@@ -168,23 +186,35 @@ router.get("/:jobId/artifacts/:artifactId", (req: Request, res: Response) => {
       return res.status(404).json({
         status: 404,
         error: {
-          code: "NOT_FOUND",
+          code: "ARTIFACT_NOT_FOUND",
           message: `Artifact ${artifactId} not found`,
+          details: {},
         },
       });
     }
 
+    // Check if artifact is stale (career profile version mismatch)
+    const currentCareerDoc = svc.careerDocService.parseCareerDocument();
+    const currentHash = svc.careerDocService.saveCareerDocumentVersion(currentCareerDoc);
+    const isStale = artifact.careerDocVersionId !== currentHash;
+
     return res.json({
       status: 200,
-      data: artifact,
+      data: {
+        ...artifact,
+        isStale,
+      },
     });
   } catch (error: any) {
     console.error("Get artifact error:", error);
     res.status(500).json({
       status: 500,
       error: {
-        code: "GET_FAILED",
-        message: error.message || "Failed to retrieve artifact",
+        code: "ARTIFACT_RETRIEVAL_FAILED",
+        message: "Failed to retrieve artifact",
+        details: {
+          reason: error.message || "Unknown error",
+        },
       },
     });
   }
@@ -192,7 +222,7 @@ router.get("/:jobId/artifacts/:artifactId", (req: Request, res: Response) => {
 
 /**
  * GET /api/jobs/:jobId/artifacts
- * List artifacts for a job
+ * List artifacts for a job with stale status
  */
 router.get("/:jobId/artifacts", (req: Request, res: Response) => {
   try {
@@ -205,11 +235,20 @@ router.get("/:jobId/artifacts", (req: Request, res: Response) => {
       type ? (type as "resume" | "cover_letter") : undefined
     );
 
+    // Check if any artifacts are stale
+    const currentCareerDoc = svc.careerDocService.parseCareerDocument();
+    const currentHash = svc.careerDocService.saveCareerDocumentVersion(currentCareerDoc);
+
+    const artifactsWithStaleStatus = artifacts.map((artifact) => ({
+      ...artifact,
+      isStale: artifact.careerDocVersionId !== currentHash,
+    }));
+
     return res.json({
       status: 200,
       data: {
-        artifacts,
-        count: artifacts.length,
+        artifacts: artifactsWithStaleStatus,
+        count: artifactsWithStaleStatus.length,
       },
     });
   } catch (error: any) {
@@ -217,8 +256,11 @@ router.get("/:jobId/artifacts", (req: Request, res: Response) => {
     res.status(500).json({
       status: 500,
       error: {
-        code: "LIST_FAILED",
-        message: error.message || "Failed to list artifacts",
+        code: "ARTIFACTS_LIST_FAILED",
+        message: "Failed to list artifacts",
+        details: {
+          reason: error.message || "Unknown error",
+        },
       },
     });
   }
@@ -226,9 +268,9 @@ router.get("/:jobId/artifacts", (req: Request, res: Response) => {
 
 /**
  * POST /api/jobs/:jobId/artifacts/:artifactId/pdf
- * Export artifact as PDF
+ * Export artifact as PDF using template-based rendering
  */
-router.post("/:jobId/artifacts/:artifactId/pdf", (req: Request, res: Response) => {
+router.post("/:jobId/artifacts/:artifactId/pdf", async (req: Request, res: Response) => {
   try {
     const svc = getServices();
     const { artifactId } = req.params;
@@ -238,48 +280,60 @@ router.post("/:jobId/artifacts/:artifactId/pdf", (req: Request, res: Response) =
       return res.status(404).json({
         status: 404,
         error: {
-          code: "NOT_FOUND",
+          code: "ARTIFACT_NOT_FOUND",
           message: `Artifact ${artifactId} not found`,
+          details: {},
         },
       });
     }
 
-    // Create PDF from rendered text
-    const pdf = new PDFDocument();
-    const stream = pdf.pipe(new PassThrough());
+    // Check if artifact is stale (career profile version mismatch)
+    const currentCareerDoc = svc.careerDocService.parseCareerDocument();
+    const currentHash = svc.careerDocService.saveCareerDocumentVersion(currentCareerDoc);
+    const isStale = artifact.careerDocVersionId !== currentHash;
 
-    // Add title
-    pdf.fontSize(16).font("Helvetica-Bold").text("Resume", { underline: true });
-    pdf.fontSize(12).font("Helvetica");
+    // Generate PDF from artifact JSON using template service
+    // This ensures ATS-safe structure: single column, standard typography, no graphics
+    let pdfBytes: Buffer;
+    try {
+      pdfBytes = await svc.pdfExportService.generateResumePDF(artifact.jsonContent.resume);
 
-    // Add resume content
-    pdf.text(artifact.renderedText, { align: "left" });
+      if (!pdfBytes || pdfBytes.length === 0) {
+        throw new Error("PDF generation produced empty output");
+      }
+    } catch (pdfError: any) {
+      console.error("PDF generation error:", pdfError);
+      return res.status(500).json({
+        status: 500,
+        error: {
+          code: "PDF_GENERATION_FAILED",
+          message: "Failed to generate PDF from artifact template",
+          details: {
+            reason: pdfError.message || "Unknown error",
+            artifactId,
+          },
+        },
+      });
+    }
 
-    pdf.end();
-
-    // Set response headers
+    // Set response headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="resume_v${artifact.version}.pdf"`
     );
+    res.setHeader("Content-Length", pdfBytes.length);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-    // Pipe PDF to response
-    stream.pipe(res);
+    // Send PDF bytes
+    res.send(pdfBytes);
 
-    // Handle errors
-    stream.on("error", (error: Error) => {
-      console.error("PDF generation error:", error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          status: 500,
-          error: {
-            code: "PDF_GENERATION_FAILED",
-            message: error.message,
-          },
-        });
-      }
-    });
+    // Log stale warning (no error, but useful for debugging)
+    if (isStale) {
+      console.warn(
+        `PDF exported for stale artifact (id=${artifactId}, version=${artifact.version}, careerDocVersion=${artifact.careerDocVersionId})`
+      );
+    }
   } catch (error: any) {
     console.error("PDF export error:", error);
     if (!res.headersSent) {
@@ -287,7 +341,10 @@ router.post("/:jobId/artifacts/:artifactId/pdf", (req: Request, res: Response) =
         status: 500,
         error: {
           code: "PDF_EXPORT_FAILED",
-          message: error.message || "Failed to export PDF",
+          message: "Unexpected error during PDF export",
+          details: {
+            reason: error.message || "Unknown error",
+          },
         },
       });
     }
